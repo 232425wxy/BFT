@@ -1,0 +1,493 @@
+version: '3'
+
+services:
+  node0:
+    container_name: node0
+    image: "bft"
+    ports:
+      - "36656-36657:36656-36657"
+      - "26660:26660"
+    environment:
+      - ID=0
+      - LOG=${LOG:-bft.log}
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.2
+
+  node1:
+    container_name: node1
+    image: "bft"
+    ports:
+      - "36658-36659:36656-36657"
+      - "26661:26660"
+    environment:
+      - ID=1
+      - LOG=${LOG:-bft.log}
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.3
+
+  node2:
+    container_name: node2
+    image: "bft"
+    environment:
+      - ID=2
+      - LOG=${LOG:-bft.log}
+    ports:
+      - "36660-36661:36656-36657"
+      - "26662:26660"
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.4
+
+  node3:
+    container_name: node3
+    image: "bft"
+    environment:
+      - ID=3
+      - LOG=${LOG:-bft.log}
+    ports:
+      - "36662-36663:36656-36657"
+      - "26663:26660"
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.5
+
+  node4:
+    container_name: node4
+    image: "bft"
+    ports:
+      - "36664-36665:36656-36657"
+      - "26664:26660"
+    environment:
+      - ID=4
+      - LOG=${LOG:-bft.log}
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.6
+
+#  node5:
+#    container_name: node5
+#    image: "bft"
+#    ports:
+#      - "36666-36667:36656-36657"
+#    environment:
+#      - ID=5
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.7
+#
+#  node6:
+#    container_name: node6
+#    image: "bft"
+#    environment:
+#      - ID=6
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36668-36669:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.8
+#
+#  node7:
+#    container_name: node7
+#    image: "bft"
+#    environment:
+#      - ID=7
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36670-36671:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.9
+#
+#  node8:
+#    container_name: node8
+#    image: "bft"
+#    ports:
+#      - "36672-36673:36656-36657"
+#    environment:
+#      - ID=8
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.10
+#
+#  node9:
+#    container_name: node9
+#    image: "bft"
+#    ports:
+#      - "36674-36675:36656-36657"
+#    environment:
+#      - ID=9
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.11
+#
+#  node10:
+#    container_name: node10
+#    image: "bft"
+#    environment:
+#      - ID=10
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36676-36677:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.12
+#
+#  node11:
+#    container_name: node11
+#    image: "bft"
+#    environment:
+#      - ID=11
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36678-36679:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.13
+#
+#  node12:
+#    container_name: node12
+#    image: "bft"
+#    ports:
+#      - "36680-36681:36656-36657"
+#    environment:
+#      - ID=12
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.14
+#
+#  node13:
+#    container_name: node13
+#    image: "bft"
+#    ports:
+#      - "36682-36683:36656-36657"
+#    environment:
+#      - ID=13
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.15
+#
+#  node14:
+#    container_name: node14
+#    image: "bft"
+#    environment:
+#      - ID=14
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36684-36685:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.16
+#
+#  node15:
+#    container_name: node15
+#    image: "bft"
+#    environment:
+#      - ID=15
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36686-36687:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.17
+#
+#  node16:
+#    container_name: node16
+#    image: "bft"
+#    environment:
+#      - ID=16
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36688-36689:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.18
+#
+#  node17:
+#    container_name: node17
+#    image: "bft"
+#    environment:
+#      - ID=17
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36690-36691:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.19
+#
+#  node18:
+#    container_name: node18
+#    image: "bft"
+#    ports:
+#      - "36692-36693:36656-36657"
+#    environment:
+#      - ID=18
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.20
+#
+#  node19:
+#    container_name: node19
+#    image: "bft"
+#    ports:
+#      - "36694-36695:36656-36657"
+#    environment:
+#      - ID=19
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.21
+#
+#  node20:
+#    container_name: node20
+#    image: "bft"
+#    environment:
+#      - ID=20
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36696-36697:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.22
+#
+#  node21:
+#    container_name: node21
+#    image: "bft"
+#    environment:
+#      - ID=21
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36698-36699:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.23
+#
+#  node22:
+#    container_name: node22
+#    image: "bft"
+#    ports:
+#      - "36700-36701:36656-36657"
+#    environment:
+#      - ID=22
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.24
+#
+#  node23:
+#    container_name: node23
+#    image: "bft"
+#    ports:
+#      - "36702-36703:36656-36657"
+#    environment:
+#      - ID=23
+#      - LOG=${LOG:-bft.log}
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.25
+#
+#  node24:
+#    container_name: node24
+#    image: "bft"
+#    environment:
+#      - ID=24
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36704-36705:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.26
+#
+#  node25:
+#    container_name: node25
+#    image: "bft"
+#    environment:
+#      - ID=25
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36706-36707:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.27
+#
+#  node26:
+#    container_name: node26
+#    image: "bft"
+#    environment:
+#      - ID=26
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36708-36709:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.28
+#
+#  node27:
+#    container_name: node27
+#    image: "bft"
+#    environment:
+#      - ID=27
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36710-36711:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.29
+#
+#  node28:
+#    container_name: node28
+#    image: "bft"
+#    environment:
+#      - ID=28
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36712-36713:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.30
+#
+#  node29:
+#    container_name: node29
+#    image: "bft"
+#    environment:
+#      - ID=29
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36714-36715:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.31
+#
+#  node30:
+#    container_name: node30
+#    image: "bft"
+#    environment:
+#      - ID=30
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36716-36717:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.32
+
+#  node31:
+#    container_name: node31
+#    image: "bft"
+#    environment:
+#      - ID=31
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36718-36719:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.33
+#
+#  node32:
+#    container_name: node32
+#    image: "bft"
+#    environment:
+#      - ID=32
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36720-36721:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.34
+#
+#  node33:
+#    container_name: node33
+#    image: "bft"
+#    environment:
+#      - ID=33
+#      - LOG=${LOG:-bft.log}
+#    ports:
+#      - "36722-36723:36656-36657"
+#    volumes:
+#      - /root/BFT:/bft:Z
+#    networks:
+#      localnet:
+#        ipv4_address: 192.166.1.35
+
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.166.1.0/16
+

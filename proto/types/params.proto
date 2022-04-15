@@ -1,0 +1,45 @@
+syntax = "proto3";
+package types;
+
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.equal_all) = true;
+
+// ConsensusParams contains consensus critical parameters that determine the
+// validity of blocks.
+message ConsensusParams {
+  BlockParams     block = 1 [(gogoproto.nullable) = false];
+  ValidatorParams validator = 2 [(gogoproto.nullable) = false];
+}
+
+// BlockParams contains limits on the block size.
+message BlockParams {
+  // Max block size, in bytes.
+  // Note: must be greater than 0
+  int64 max_bytes = 1;
+  // Minimum time increment between consecutive blocks (in milliseconds) If the
+  // block header timestamp is ahead of the system clock, decrease this value.
+  //
+  // Not exposed to the application.
+  int64 time_iota_ms = 2;
+}
+
+
+// ValidatorParams restrict the public key types validators can use.
+// NOTE: uses ABCI pubkey naming, not Amino names.
+message ValidatorParams {
+  option (gogoproto.populate) = true;
+  option (gogoproto.equal) = true;
+
+  repeated string pub_key_types = 1;
+}
+
+// HashedParams is a subset of ConsensusParams.
+//
+// It is hashed into the Header.ConsensusHash.
+message HashedParams {
+  int64 block_max_bytes = 1;
+}
+
+// 命令：protoc --gofast_out=. -I=$GOPATH/src/github.com -I=. params.proto

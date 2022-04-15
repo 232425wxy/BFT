@@ -1,0 +1,9 @@
+syntax = "proto3";
+package bits;
+
+message BitArray {
+  int64           bits = 1;
+  repeated uint64 elems = 2;
+}
+
+// 命令：protoc --gofast_out=. -I=$GOPATH/src/github.com -I=. types.proto

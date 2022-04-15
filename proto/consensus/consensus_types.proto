@@ -1,0 +1,87 @@
+syntax = "proto3";
+package consensus;
+
+
+import "gogoproto/gogo.proto";
+import "BFT/proto/types/types_types.proto";
+import "BFT/proto/libs/bits/bits_types.proto";
+
+// NewRoundStep is sent for every step taken in the ConsensusState.
+// For every height/round/step transition
+message NewRoundStep {
+  int64  height = 1;
+  int32  round = 2;
+  uint32 step = 3;
+  int64  seconds_since_start_time = 4;
+  int32  last_reply_round = 5;
+}
+
+message NewValidBlock {
+  int64                          height = 1;
+  int32                          round = 2;
+  types.PartSetHeader block_part_set_header = 3 [(gogoproto.nullable) = false];
+  bits.BitArray  block_parts = 4;
+  bool                           is_reply = 5;
+}
+
+message PrePrepare {
+  types.PrePrepare PrePrepare = 1 [(gogoproto.nullable) = false];
+}
+
+message PrePreparePOL {
+  int64                         height = 1;
+  int32                         prePrepare_pol_round = 2;
+  bits.BitArray prePrepare_pol = 3 [(gogoproto.nullable) = false];
+}
+
+// BlockPart is sent when gossipping a piece of the proposed block.
+message BlockPart {
+  int64                 height = 1;
+  int32                 round = 2;
+  types.Part part = 3 [(gogoproto.nullable) = false];
+}
+
+message Vote {
+  types.Vote vote = 1;
+}
+
+// HasVote is sent to indicate that a particular vote has been received.
+message HasVote {
+  int64                          height = 1;
+  int32                          round = 2;
+  types.SignedMsgType type = 3;
+  int32                          index = 4;
+}
+
+// VoteSetMaj23 is sent to indicate that a given BlockID has seen +2/3 votes.
+message VoteSetMaj23 {
+  int64                          height = 1;
+  int32                          round = 2;
+  types.SignedMsgType type = 3;
+  types.BlockID       block_id = 4 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
+}
+
+// VoteSetBits is sent to communicate the bit-array of votes seen for the BlockID.
+message VoteSetBits {
+  int64                          height = 1;
+  int32                          round = 2;
+  types.SignedMsgType type = 3;
+  types.BlockID       block_id = 4 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
+  bits.BitArray  votes = 5 [(gogoproto.nullable) = false];
+}
+
+message Message {
+  oneof sum {
+    NewRoundStep  new_round_step = 1;
+    NewValidBlock new_valid_block = 2;
+    PrePrepare    prePrepare = 3;
+    PrePreparePOL prePrepare_pol = 4;
+    BlockPart     block_part = 5;
+    Vote          vote = 6;
+    HasVote       has_vote = 7;
+    VoteSetMaj23  vote_set_maj23 = 8;
+    VoteSetBits   vote_set_bits = 9;
+  }
+}
+
+// command: protoc --gofast_out=. -I=. -I=$GOPATH/src -I=$GOPATH/src/github.com consensus_types.proto

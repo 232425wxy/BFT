@@ -1,0 +1,32 @@
+syntax = "proto3";
+package types;
+
+
+import "gogoproto/gogo.proto";
+import "BFT/proto/crypto/keys.proto";
+
+enum ValidatorType {
+  CANDIDATE_PRIMARY = 0;
+  CONSENSUS = 1;
+  NORMAL = 2;
+}
+
+message ValidatorSet {
+  repeated Validator validators = 1;
+  Validator          primary = 2;
+}
+
+message Validator {
+  bytes                       address = 1;
+  crypto.PublicKey pub_key = 2 [(gogoproto.nullable) = false];
+  double                      voting_power = 3;
+  ValidatorType               type = 4;
+  double                      trust = 5;
+}
+
+message SimpleValidator {
+  crypto.PublicKey pub_key = 1;
+}
+
+
+// 命令：protoc --gofast_out=. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src validator.proto

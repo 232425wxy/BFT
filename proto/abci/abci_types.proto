@@ -1,0 +1,258 @@
+syntax = "proto3";
+package abci;
+
+
+// For more information on gogo.proto, see:
+// https://github.com/gogo/protobuf/blob/master/extensions.md
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "BFT/proto/types/types_types.proto";
+import "BFT/proto/crypto/keys.proto";
+
+// This file is copied from http://github.com/tendermint/abci
+// NOTE: When using custom types, mind the warnings.
+// https://github.com/gogo/protobuf/blob/master/custom_types.md#warnings-and-issues
+
+//----------------------------------------
+// Request types
+
+message Request {
+  oneof value {
+    RequestEcho               echo = 1;
+    RequestFlush              flush = 2;
+    RequestInfo               info = 3;
+    RequestSetOption          set_option = 4;
+    RequestInitChain          init_chain = 5;
+    RequestQuery              query = 6;
+    RequestBeginBlock         begin_block = 7;
+    RequestCheckTx            check_tx = 8;
+    RequestDeliverTx          deliver_tx = 9;
+    RequestEndBlock           end_block = 10;
+    RequestCommit             commit = 11;
+  }
+}
+
+message RequestEcho {
+  string message = 1;
+}
+
+message RequestFlush {}
+
+message RequestInfo {
+
+}
+
+// nondeterministic
+message RequestSetOption {
+  string key = 1;
+  string value = 2;
+}
+
+message RequestInitChain {
+  google.protobuf.Timestamp time = 1
+  [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  string                   chain_id = 2;
+  repeated ValidatorUpdate validators = 4 [(gogoproto.nullable) = false];
+  bytes                    app_state_bytes = 5;
+  int64                    initial_height = 6;
+}
+
+message RequestQuery {
+  string  data = 1;
+}
+
+message RequestBeginBlock {
+  bytes                   hash = 1;
+  types.Header header = 2 [(gogoproto.nullable) = false];
+  LastCommitInfo          last_commit_info = 3 [(gogoproto.nullable) = false];
+}
+
+enum CheckTxType {
+  NEW = 0 [(gogoproto.enumvalue_customname) = "New"];
+  RECHECK = 1 [(gogoproto.enumvalue_customname) = "Recheck"];
+}
+
+message RequestCheckTx {
+  bytes       tx = 1;
+  CheckTxType type = 2;
+}
+
+message RequestDeliverTx {
+  bytes tx = 1;
+}
+
+message RequestEndBlock {
+  int64 height = 1;
+}
+
+message RequestCommit {}
+
+//----------------------------------------
+// Response types
+
+message Response {
+  oneof value {
+    ResponseException          exception = 1;
+    ResponseEcho               echo = 2;
+    ResponseFlush              flush = 3;
+    ResponseInfo               info = 4;
+    ResponseSetOption          set_option = 5;
+    ResponseInitChain          init_chain = 6;
+    ResponseQuery              query = 7;
+    ResponseBeginBlock         begin_block = 8;
+    ResponseCheckTx            check_tx = 9;
+    ResponseDeliverTx          deliver_tx = 10;
+    ResponseEndBlock           end_block = 11;
+    ResponseCommit             commit = 12;
+  }
+}
+
+// nondeterministic
+message ResponseException {
+  string error = 1;
+}
+
+message ResponseEcho {
+  string message = 1;
+}
+
+message ResponseFlush {}
+
+message ResponseInfo {
+  string data = 1;
+
+  int64 last_block_height = 4;
+  bytes last_block_app_hash = 5;
+}
+
+// nondeterministic
+message ResponseSetOption {
+  uint32 code = 1;
+  // bytes data = 2;
+  string log = 3;
+  string info = 4;
+}
+
+message ResponseInitChain {
+  repeated ValidatorUpdate validators = 2 [(gogoproto.nullable) = false];
+  bytes                    app_hash = 3;
+}
+
+message ResponseQuery {
+  string                     log = 1;
+  bytes                      key = 3;
+  bytes                      value = 4;
+  int64                      index = 2;
+  int64                      height = 5;
+  string                     encode = 6;
+}
+
+message ResponseBeginBlock {
+  repeated Event events = 1
+  [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+}
+
+message ResponseCheckTx {
+  uint32         code = 1;
+  bytes          data = 2;
+  string         log = 3;  // nondeterministic
+  string         info = 4;  // nondeterministic
+  repeated Event events = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+  string codespace = 6;
+}
+
+message ResponseDeliverTx {
+  uint32         code = 1;
+  bytes          data = 2;
+  string         log = 3;  // nondeterministic
+  string         info = 4;  // nondeterministic
+  repeated Event events = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"]; // nondeterministic
+  string codespace = 6;
+}
+
+message ResponseEndBlock {
+  repeated ValidatorUpdate validator_updates = 1 [(gogoproto.nullable) = false];
+  repeated Event  events = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+}
+
+message ResponseCommit {
+  // reserve 1
+  bytes data = 2;
+}
+
+//----------------------------------------
+// Misc.
+
+message LastCommitInfo {
+  int32             round = 1;
+  repeated VoteInfo votes = 2 [(gogoproto.nullable) = false];
+}
+
+// Event allows application developers to attach additional information to
+// ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and ResponseDeliverTx.
+// Later, transactions may be queried using these events.
+message Event {
+  string                  type = 1;
+  repeated EventAttribute attributes = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag) = "attributes,omitempty"
+  ];
+}
+
+// EventAttribute is a single key-value pair, associated with an event.
+message EventAttribute {
+  bytes key = 1;
+  bytes value = 2;
+  bool  index = 3;  // nondeterministic
+}
+
+// TxResult contains results of executing the transaction.
+//
+// One usage is indexing transaction results.
+message TxResult {
+  int64             height = 1;
+  uint32            index = 2;
+  bytes             tx = 3;
+  ResponseDeliverTx result = 4 [(gogoproto.nullable) = false];
+}
+
+//----------------------------------------
+// Blockchain Types
+
+// Validator
+message Validator {
+  bytes address = 1;  // The first 20 bytes of SHA256(public key)
+  // PubKey pub_key = 2 [(gogoproto.nullable)=false];
+  double power = 3;  // The voting power
+}
+
+// ValidatorUpdate
+message ValidatorUpdate {
+  crypto.PublicKey            pub_key = 1 [(gogoproto.nullable) = false];
+  double                      power = 2;
+}
+
+// VoteInfo
+message VoteInfo {
+  Validator validator = 1 [(gogoproto.nullable) = false];
+  bool      signed_last_block = 2;
+}
+
+//----------------------------------------
+// Service Definition
+
+service ABCIApplication {
+  rpc Echo(RequestEcho) returns (ResponseEcho);
+  rpc Flush(RequestFlush) returns (ResponseFlush);
+  rpc Info(RequestInfo) returns (ResponseInfo);
+  rpc SetOption(RequestSetOption) returns (ResponseSetOption);
+  rpc DeliverTx(RequestDeliverTx) returns (ResponseDeliverTx);
+  rpc CheckTx(RequestCheckTx) returns (ResponseCheckTx);
+  rpc Query(RequestQuery) returns (ResponseQuery);
+  rpc Commit(RequestCommit) returns (ResponseCommit);
+  rpc InitChain(RequestInitChain) returns (ResponseInitChain);
+  rpc BeginBlock(RequestBeginBlock) returns (ResponseBeginBlock);
+  rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
+}
+
+// 命令：protoc --gofast_out=plugins=grpc:. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src -I=$GOPATH/src/BFT/proto/types abci_types.proto

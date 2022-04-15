@@ -1,0 +1,65 @@
+syntax = "proto3";
+package state;
+
+import "gogoproto/gogo.proto";
+import "BFT/proto/abci/abci_types.proto";
+import "BFT/proto/types/types_types.proto";
+import "BFT/proto/types/validator.proto";
+import "BFT/proto/types/params.proto";
+import "google/protobuf/timestamp.proto";
+
+// ABCIResponses retains the responses
+// of the various ABCI calls during block processing.
+// It is persisted to disk for each height before calling Commit.
+message ABCIResponses {
+  repeated abci.ResponseDeliverTx deliver_txs = 1;
+  abci.ResponseEndBlock           end_block = 2;
+  abci.ResponseBeginBlock         begin_block = 3;
+}
+
+// ValidatorsInfo represents the latest validator set, or the last height it changed
+message ValidatorsInfo {
+  types.ValidatorSet validator_set = 1;
+  int64                         last_height_changed = 2;
+}
+
+// ConsensusParamsInfo represents the latest consensus params, or the last height it changed
+message ConsensusParamsInfo {
+  types.ConsensusParams consensus_params = 1 [(gogoproto.nullable) = false];
+}
+
+message State {
+  // immutable
+  string chain_id = 2 [(gogoproto.customname) = "ChainID"];
+  int64  initial_height = 14;
+
+  // LastBlockHeight=0 at genesis (ie. block(H=0) does not exist)
+  int64                    last_block_height = 3;
+  types.BlockID last_block_id = 4
+  [(gogoproto.nullable) = false, (gogoproto.customname) = "LastBlockID"];
+  google.protobuf.Timestamp last_block_time = 5
+  [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+
+  // LastValidators is used to validate block.LastCommit.
+  // Validators are persisted to the database separately every time they change,
+  // so we can query for historical validator sets.
+  // Note that if s.LastBlockHeight causes a valset change,
+  // we set s.LastHeightValidatorsChanged = s.LastBlockHeight + 1 + 1
+  // Extra +1 due to nextValSet delay.
+  types.ValidatorSet next_validators = 6;
+  types.ValidatorSet validators = 7;
+  types.ValidatorSet last_validators = 8;
+  int64                         last_height_validators_changed = 9;
+
+  // Consensus parameters used for validating blocks.
+  // Changes returned by EndBlock and updated after Commit.
+  types.ConsensusParams consensus_params = 10 [(gogoproto.nullable) = false];
+
+  // Merkle root of the results from executing prev block
+  bytes last_results_hash = 12;
+
+  // the latest AppHash we've received from calling abci.Commit()
+  bytes app_hash = 13;
+}
+
+// 命令：protoc --gofast_out=. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src state_types.proto

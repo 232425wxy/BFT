@@ -1,0 +1,13 @@
+syntax = "proto3";
+package types;
+
+import "gogoproto/gogo.proto";
+import "BFT/proto/types/types_types.proto";
+
+message Block {
+  Header                        header = 1 [(gogoproto.nullable) = false];
+  Data                          data = 2 [(gogoproto.nullable) = false];
+  Reply                         last_reply = 3;
+}
+
+// 命令：protoc --gofast_out=. -I=. -I=$GOPATH/src -I=$GOPATH/src/github.com block.proto

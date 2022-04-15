@@ -1,0 +1,30 @@
+syntax = "proto3";
+package gossip;
+
+import "gogoproto/gogo.proto";
+import "BFT/proto/crypto/keys.proto";
+
+message PacketPing {}
+
+message PacketPong {}
+
+message PacketMsg {
+  int32 channel_id = 1 [(gogoproto.customname) = "ChannelID"];
+  bool  eof = 2 [(gogoproto.customname) = "EOF"];
+  bytes data = 3;
+}
+
+message Packet {
+  oneof sum {
+    PacketPing packet_ping = 1;
+    PacketPong packet_pong = 2;
+    PacketMsg  packet_msg = 3;
+  }
+}
+
+message AuthSigMessage {
+  crypto.PublicKey pub_key = 1 [(gogoproto.nullable) = false];
+  bytes                       sig = 2;
+}
+
+// 命令：protoc --gofast_out=. -I=$GOPATH/src/github.com -I=$GOPATH/src -I=. conn.proto
