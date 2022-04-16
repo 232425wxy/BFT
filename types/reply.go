@@ -1,11 +1,11 @@
 package types
 
 import (
-	"BFT/crypto"
-	"BFT/crypto/merkle"
-	"BFT/libs/bits"
-	srbytes "BFT/libs/bytes"
-	"BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	"github.com/232425wxy/BFT/libs/bits"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

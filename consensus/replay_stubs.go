@@ -1,13 +1,13 @@
 package consensus
 
 import (
-	abci "BFT/abci/types"
-	"BFT/libs/clist"
-	mempl "BFT/mempool"
-	protoabci "BFT/proto/abci"
-	protostate "BFT/proto/state"
-	"BFT/proxy"
-	"BFT/types"
+	abci "github.com/232425wxy/BFT/abci/types"
+	"github.com/232425wxy/BFT/libs/clist"
+	mempl "github.com/232425wxy/BFT/mempool"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	protostate "github.com/232425wxy/BFT/proto/state"
+	"github.com/232425wxy/BFT/proxy"
+	"github.com/232425wxy/BFT/types"
 )
 
 type emptyMempool struct{}

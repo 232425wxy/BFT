@@ -1,7 +1,7 @@
 package gossip
 
 import (
-	"BFT/libs/service"
+	"github.com/232425wxy/BFT/libs/service"
 )
 
 // Reactor 负责处理一个或多个 Channel 上的传入消息。当 Reactor 被添加到 Switch 时

@@ -1,6 +1,6 @@
 package state
 
-import "BFT/types"
+import "github.com/232425wxy/BFT/types"
 
 //------------------------------------------------------
 // blockchain services types

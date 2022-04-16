@@ -1,7 +1,7 @@
 package gossip
 
 import (
-	protogossip "BFT/proto/gossip"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"bufio"
 	"errors"
 	"fmt"
@@ -16,11 +16,11 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"BFT/libs/log"
-	srmath "BFT/libs/math"
-	"BFT/libs/protoio"
-	"BFT/libs/service"
-	"BFT/libs/timer"
+	"github.com/232425wxy/BFT/libs/log"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	"github.com/232425wxy/BFT/libs/protoio"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/libs/timer"
 )
 
 const (

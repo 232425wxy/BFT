@@ -1,7 +1,7 @@
 package client
 
 import (
-	"BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"fmt"
 	"io/ioutil"
 	"net/http"

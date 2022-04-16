@@ -1,7 +1,7 @@
 package gossip
 
 import (
-	protogossip "BFT/proto/gossip"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"encoding/hex"
 	"errors"
 	"flag"

@@ -4,7 +4,7 @@
 package consensus
 
 import (
-	"BFT/proto/types"
+	"github.com/232425wxy/BFT/proto/types"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"

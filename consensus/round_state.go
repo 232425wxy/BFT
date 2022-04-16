@@ -1,8 +1,8 @@
 package consensus
 
 import (
-	"BFT/libs/bytes"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/types"
 	"encoding/json"
 	"fmt"
 	"time"

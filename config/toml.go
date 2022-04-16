@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	sros "BFT/libs/os"
+	sros "github.com/232425wxy/BFT/libs/os"
 )
 
 // DefaultDirPerm is the default permissions used when creating directories.
@@ -47,7 +47,7 @@ func EnsureRoot(rootDir string) {
 	}
 }
 
-// XXX: this func should probably be called by cmd/BFT/commands/init.go
+// XXX: this func should probably be called by cmd/github.com/232425wxy/BFT/commands/init.go
 // alongside the writing of the genesis.json and priv_validator.json
 func writeDefaultConfigFile(configFilePath string) {
 	WriteConfigFile(configFilePath, DefaultConfig())

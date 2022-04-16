@@ -1,11 +1,11 @@
 package core
 
 import (
-	cm "BFT/consensus"
-	srmath "BFT/libs/math"
-	coretypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
-	"BFT/types"
+	cm "github.com/232425wxy/BFT/consensus"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 // Validators gets the validator set at the given block height.

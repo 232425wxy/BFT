@@ -1,7 +1,7 @@
 package types
 
 import (
-	protoabci "BFT/proto/abci"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"bufio"
 	"encoding/binary"
 	"github.com/gogo/protobuf/proto"

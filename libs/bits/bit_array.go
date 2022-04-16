@@ -1,9 +1,9 @@
 package bits
 
 import (
-	srmath "BFT/libs/math"
-	srrand "BFT/libs/rand"
-	protobits "BFT/proto/libs/bits"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	protobits "github.com/232425wxy/BFT/proto/libs/bits"
 	"encoding/binary"
 	"fmt"
 	"regexp"

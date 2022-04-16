@@ -1,12 +1,12 @@
 package state
 
 import (
-	srmath "BFT/libs/math"
-	sros "BFT/libs/os"
-	protoabci "BFT/proto/abci"
-	protostate "BFT/proto/state"
-	prototypes "BFT/proto/types"
-	"BFT/types"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	sros "github.com/232425wxy/BFT/libs/os"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	protostate "github.com/232425wxy/BFT/proto/state"
+	prototypes "github.com/232425wxy/BFT/proto/types"
+	"github.com/232425wxy/BFT/types"
 	"errors"
 	"fmt"
 	"github.com/gogo/protobuf/proto"

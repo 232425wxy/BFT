@@ -1,8 +1,8 @@
 package gossip
 
 import (
-	srlog "BFT/libs/log"
-	protogossip "BFT/proto/gossip"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"context"
 	"fmt"
 	"net"
@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/net/netutil"
 
-	"BFT/crypto"
-	"BFT/libs/protoio"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/libs/protoio"
 )
 
 const (

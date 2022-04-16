@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	abcicli "BFT/abci/client"
-	srlog "BFT/libs/log"
-	sros "BFT/libs/os"
-	"BFT/libs/service"
+	abcicli "github.com/232425wxy/BFT/abci/client"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	sros "github.com/232425wxy/BFT/libs/os"
+	"github.com/232425wxy/BFT/libs/service"
 	"fmt"
 )
 

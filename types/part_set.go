@@ -1,13 +1,13 @@
 package types
 
 import (
-	"BFT/crypto/merkle"
-	"BFT/crypto/srhash"
-	"BFT/libs/bits"
-	srbytes "BFT/libs/bytes"
-	srjson "BFT/libs/json"
-	srmath "BFT/libs/math"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	"github.com/232425wxy/BFT/libs/bits"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

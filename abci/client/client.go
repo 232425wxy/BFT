@@ -1,8 +1,8 @@
 package client
 
 import (
-	"BFT/libs/service"
-	protoabci "BFT/proto/abci"
+	"github.com/232425wxy/BFT/libs/service"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"sync"
 )
 

@@ -1,13 +1,13 @@
 package consensus
 
 import (
-	auto "BFT/libs/autofile"
-	srjson "BFT/libs/json"
-	srlog "BFT/libs/log"
-	sros "BFT/libs/os"
-	"BFT/libs/service"
-	srtime "BFT/libs/time"
-	protoconsensus "BFT/proto/consensus"
+	auto "github.com/232425wxy/BFT/libs/autofile"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	sros "github.com/232425wxy/BFT/libs/os"
+	"github.com/232425wxy/BFT/libs/service"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	protoconsensus "github.com/232425wxy/BFT/proto/consensus"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -45,9 +45,9 @@ type EndHeightMessage struct {
 type WALMessage interface{}
 
 func init() {
-	srjson.RegisterType(msgInfo{}, "BFT/wal/MsgInfo")
-	srjson.RegisterType(timeoutInfo{}, "BFT/wal/TimeoutInfo")
-	srjson.RegisterType(EndHeightMessage{}, "BFT/wal/EndHeightMessage")
+	srjson.RegisterType(msgInfo{}, "github.com/232425wxy/BFT/wal/MsgInfo")
+	srjson.RegisterType(timeoutInfo{}, "github.com/232425wxy/BFT/wal/TimeoutInfo")
+	srjson.RegisterType(EndHeightMessage{}, "github.com/232425wxy/BFT/wal/EndHeightMessage")
 }
 
 //--------------------------------------------------------

@@ -1,12 +1,12 @@
 package blockchain
 
 import (
-	"BFT/gossip"
-	"BFT/libs/log"
-	protoblockchain "BFT/proto/blockchain"
-	sm "BFT/state"
-	"BFT/store"
-	"BFT/types"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/log"
+	protoblockchain "github.com/232425wxy/BFT/proto/blockchain"
+	sm "github.com/232425wxy/BFT/state"
+	"github.com/232425wxy/BFT/store"
+	"github.com/232425wxy/BFT/types"
 	"fmt"
 	"reflect"
 	"time"

@@ -1,9 +1,9 @@
 package proxy
 
 import (
-	abcicli "BFT/abci/client"
-	"BFT/abci/example/kvstore"
-	"BFT/abci/types"
+	abcicli "github.com/232425wxy/BFT/abci/client"
+	"github.com/232425wxy/BFT/abci/example/kvstore"
+	"github.com/232425wxy/BFT/abci/types"
 	"sync"
 )
 

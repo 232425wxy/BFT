@@ -1,17 +1,17 @@
 package main
 
 import (
-	"BFT/crypto/srhash"
-	srjson "BFT/libs/json"
-	srrand "BFT/libs/rand"
-	srtime "BFT/libs/time"
-	ctypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	ctypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"github.com/gorilla/websocket"
 	"net/url"
 	"strings"
@@ -143,7 +143,6 @@ func (bom *bomber) receiveRoutine() {
 			case websocket.TextMessage:
 				var rpcRes rpctypes.RPCResponse
 				err = json.Unmarshal(p, &rpcRes)
-				fmt.Println(rpcRes)
 				if err != nil {
 					printErrorAndExit("unmarshal RPCResponse failed", err)
 				}

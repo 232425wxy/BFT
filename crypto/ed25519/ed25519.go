@@ -1,9 +1,9 @@
 package ed25519
 
 import (
-	"BFT/crypto"
-	"BFT/crypto/srhash"
-	srjson "BFT/libs/json"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	srjson "github.com/232425wxy/BFT/libs/json"
 	"bytes"
 	"crypto/ed25519"
 	"fmt"
@@ -15,8 +15,8 @@ import (
 var _ crypto.PrivKey = PrivKey{}
 
 const (
-	PrivKeyName = "BFT/PrivKeyEd25519" // 私钥的名字
-	PubKeyName  = "BFT/PubKeyEd25519"  // 公钥的名字
+	PrivKeyName = "github.com/232425wxy/BFT/PrivKeyEd25519" // 私钥的名字
+	PubKeyName  = "github.com/232425wxy/BFT/PubKeyEd25519"  // 公钥的名字
 	// PubKeySize 公钥的长度，32字节
 	PubKeySize = 32
 	// SignatureSize 签名的长度，64字节

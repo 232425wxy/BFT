@@ -1,18 +1,18 @@
 package consensus
 
 import (
-	"BFT/gossip"
-	"BFT/libs/bits"
-	srevents "BFT/libs/events"
-	srjson "BFT/libs/json"
-	srlog "BFT/libs/log"
-	srtime "BFT/libs/time"
-	protoconsensus "BFT/proto/consensus"
-	prototypes "BFT/proto/types"
-	sm "BFT/state"
-	"BFT/types"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/bits"
+	srevents "github.com/232425wxy/BFT/libs/events"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	protoconsensus "github.com/232425wxy/BFT/proto/consensus"
+	prototypes "github.com/232425wxy/BFT/proto/types"
+	sm "github.com/232425wxy/BFT/state"
+	"github.com/232425wxy/BFT/types"
 	"github.com/gogo/protobuf/proto"
 	"reflect"
 	"sync"
@@ -1268,15 +1268,15 @@ type Message interface {
 }
 
 func init() {
-	srjson.RegisterType(&NewRoundStepMessage{}, "BFT/NewRoundStepMessage")
-	srjson.RegisterType(&NewValidBlockMessage{}, "BFT/NewValidBlockMessage")
-	srjson.RegisterType(&PrePrepareMessage{}, "BFT/PrePrepare")
-	srjson.RegisterType(&PrePreparePOLMessage{}, "BFT/PrePreparePOL")
-	srjson.RegisterType(&BlockPartMessage{}, "BFT/BlockPart")
-	srjson.RegisterType(&VoteMessage{}, "BFT/Vote")
-	srjson.RegisterType(&HasVoteMessage{}, "BFT/HasVote")
-	srjson.RegisterType(&VoteSetMaj23Message{}, "BFT/VoteSetMaj23")
-	srjson.RegisterType(&VoteSetBitsMessage{}, "BFT/VoteSetBits")
+	srjson.RegisterType(&NewRoundStepMessage{}, "github.com/232425wxy/BFT/NewRoundStepMessage")
+	srjson.RegisterType(&NewValidBlockMessage{}, "github.com/232425wxy/BFT/NewValidBlockMessage")
+	srjson.RegisterType(&PrePrepareMessage{}, "github.com/232425wxy/BFT/PrePrepare")
+	srjson.RegisterType(&PrePreparePOLMessage{}, "github.com/232425wxy/BFT/PrePreparePOL")
+	srjson.RegisterType(&BlockPartMessage{}, "github.com/232425wxy/BFT/BlockPart")
+	srjson.RegisterType(&VoteMessage{}, "github.com/232425wxy/BFT/Vote")
+	srjson.RegisterType(&HasVoteMessage{}, "github.com/232425wxy/BFT/HasVote")
+	srjson.RegisterType(&VoteSetMaj23Message{}, "github.com/232425wxy/BFT/VoteSetMaj23")
+	srjson.RegisterType(&VoteSetBitsMessage{}, "github.com/232425wxy/BFT/VoteSetBits")
 }
 
 func decodeMsg(bz []byte) (msg Message, err error) {

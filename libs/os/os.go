@@ -1,7 +1,7 @@
 package os
 
 import (
-	"BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/log"
 	"errors"
 	"fmt"
 	"io"

@@ -1,15 +1,15 @@
 package blockchain
 
 import (
-	"BFT/gossip"
+	"github.com/232425wxy/BFT/gossip"
 	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
-	"BFT/libs/log"
-	"BFT/libs/service"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/types"
 )
 
 

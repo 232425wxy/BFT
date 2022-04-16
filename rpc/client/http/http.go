@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	srjson "BFT/libs/json"
-	"BFT/libs/log"
-	"BFT/libs/pubsub"
-	"BFT/libs/service"
-	rpcclient "BFT/rpc/client"
-	coretypes "BFT/rpc/core/types"
-	jsonrpcclient "BFT/rpc/jsonrpc/client"
-	"BFT/types"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/pubsub"
+	"github.com/232425wxy/BFT/libs/service"
+	rpcclient "github.com/232425wxy/BFT/rpc/client"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	jsonrpcclient "github.com/232425wxy/BFT/rpc/jsonrpc/client"
+	"github.com/232425wxy/BFT/types"
 )
 
 type HTTP struct {

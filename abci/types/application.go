@@ -1,7 +1,7 @@
 package types
 
 import (
-	protoabci "BFT/proto/abci"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 )
 
 // Application 是一个接口，允许任何有限的、确定性的状态机由基于区块链的复制引擎通过 ABCI 驱动。

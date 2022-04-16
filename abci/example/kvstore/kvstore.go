@@ -1,12 +1,12 @@
 package kvstore
 
 import (
-	"BFT/abci/example/code"
-	"BFT/abci/types"
-	"BFT/crypto/srhash"
-	hex_bytes "BFT/libs/bytes"
-	"BFT/libs/cmap"
-	protoabci "BFT/proto/abci"
+	"github.com/232425wxy/BFT/abci/example/code"
+	"github.com/232425wxy/BFT/abci/types"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	hex_bytes "github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/libs/cmap"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"

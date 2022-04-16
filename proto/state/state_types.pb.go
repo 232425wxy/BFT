@@ -4,8 +4,8 @@
 package state
 
 import (
-	abci "BFT/proto/abci"
-	types2 "BFT/proto/types"
+	abci "github.com/232425wxy/BFT/proto/abci"
+	types2 "github.com/232425wxy/BFT/proto/types"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"

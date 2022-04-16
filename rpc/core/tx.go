@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sort"
 
-	srmath "BFT/libs/math"
-	srquery "BFT/libs/pubsub/query"
-	coretypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
-	"BFT/types"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	srquery "github.com/232425wxy/BFT/libs/pubsub/query"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 // Tx allows you to query the transaction results. `nil` could mean the

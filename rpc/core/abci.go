@@ -1,10 +1,10 @@
 package core
 
 import (
-	protoabci "BFT/proto/abci"
-	"BFT/proxy"
-	ctypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	"github.com/232425wxy/BFT/proxy"
+	ctypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 )
 
 // ABCIQuery queries the application for some information.

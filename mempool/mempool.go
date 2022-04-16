@@ -1,9 +1,9 @@
 package mempool
 
 import (
-	"BFT/gossip"
-	protoabci "BFT/proto/abci"
-	"BFT/types"
+	"github.com/232425wxy/BFT/gossip"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	"github.com/232425wxy/BFT/types"
 	"fmt"
 )
 

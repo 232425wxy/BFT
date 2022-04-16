@@ -1,8 +1,8 @@
 package autofile
 
 import (
-	"BFT/libs/log"
-	"BFT/libs/service"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/service"
 	"bufio"
 	"errors"
 	"fmt"

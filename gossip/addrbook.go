@@ -1,11 +1,11 @@
 package gossip
 
 import (
-	"BFT/crypto"
-	"BFT/libs/log"
-	srrand "BFT/libs/rand"
-	"BFT/libs/service"
-	"BFT/libs/tempfile"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/libs/log"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/libs/tempfile"
 	crand "crypto/rand"
 	"encoding/json"
 	"fmt"

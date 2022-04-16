@@ -1,10 +1,10 @@
 package types
 
 import (
-	srbytes "BFT/libs/bytes"
-	"BFT/libs/protoio"
-	srtime "BFT/libs/time"
-	prototypes "BFT/proto/types"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/libs/protoio"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"errors"
 	"fmt"
 	"time"

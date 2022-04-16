@@ -1,9 +1,9 @@
 package types
 
 import (
-	"BFT/crypto/merkle"
-	"BFT/crypto/srhash"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

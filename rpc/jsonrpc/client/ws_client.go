@@ -1,9 +1,9 @@
 package client
 
 import (
-	srrand "BFT/libs/rand"
-	"BFT/libs/service"
-	"BFT/rpc/jsonrpc/types"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"context"
 	"encoding/json"
 	"fmt"

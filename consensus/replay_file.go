@@ -12,13 +12,13 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	cfg "BFT/config"
-	"BFT/libs/log"
-	tmos "BFT/libs/os"
-	"BFT/proxy"
-	sm "BFT/state"
-	"BFT/store"
-	"BFT/types"
+	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/libs/log"
+	tmos "github.com/232425wxy/BFT/libs/os"
+	"github.com/232425wxy/BFT/proxy"
+	sm "github.com/232425wxy/BFT/state"
+	"github.com/232425wxy/BFT/store"
+	"github.com/232425wxy/BFT/types"
 )
 
 const (

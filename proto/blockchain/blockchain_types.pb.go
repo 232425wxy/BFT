@@ -4,7 +4,7 @@
 package blockchain
 
 import (
-	"BFT/proto/types"
+	"github.com/232425wxy/BFT/proto/types"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	io "io"

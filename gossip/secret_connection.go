@@ -1,7 +1,7 @@
 package gossip
 
 import (
-	protogossip "BFT/proto/gossip"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"bytes"
 	"crypto/cipher"
 	crand "crypto/rand"
@@ -23,11 +23,11 @@ import (
 	"golang.org/x/crypto/hkdf"
 	"golang.org/x/crypto/nacl/box"
 
-	"BFT/crypto"
-	"BFT/crypto/ed25519"
-	cryptoenc "BFT/crypto/encoding"
-	"BFT/libs/async"
-	"BFT/libs/protoio"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/crypto/ed25519"
+	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
+	"github.com/232425wxy/BFT/libs/async"
+	"github.com/232425wxy/BFT/libs/protoio"
 )
 
 // 4 + 1024 == 1028 total frame size

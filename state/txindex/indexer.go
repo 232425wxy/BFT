@@ -1,8 +1,8 @@
 package txindex
 
 import (
-	"BFT/libs/pubsub/query"
-	protoabci "BFT/proto/abci"
+	"github.com/232425wxy/BFT/libs/pubsub/query"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"context"
 	"errors"
 )

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"BFT/libs/log"
-	httprpc "BFT/rpc/client/http"
+	"github.com/232425wxy/BFT/libs/log"
+	httprpc "github.com/232425wxy/BFT/rpc/client/http"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"

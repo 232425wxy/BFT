@@ -4,8 +4,8 @@
 package abci
 
 import (
-	crypto "BFT/proto/crypto"
-	types "BFT/proto/types"
+	crypto "github.com/232425wxy/BFT/proto/crypto"
+	types "github.com/232425wxy/BFT/proto/types"
 	context "context"
 	encoding_binary "encoding/binary"
 	fmt "fmt"

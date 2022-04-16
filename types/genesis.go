@@ -1,12 +1,12 @@
 package types
 
 import (
-	"BFT/crypto"
-	srbytes "BFT/libs/bytes"
-	srjson "BFT/libs/json"
-	sros "BFT/libs/os"
-	srtime "BFT/libs/time"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	sros "github.com/232425wxy/BFT/libs/os"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"encoding/json"
 	"errors"

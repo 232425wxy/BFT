@@ -1,9 +1,9 @@
 package commands
 
 import (
-	cfg "BFT/config"
-	"BFT/libs/log"
 	"fmt"
+	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/libs/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

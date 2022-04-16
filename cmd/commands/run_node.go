@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 
-	sros "BFT/libs/os"
-	nm "BFT/node"
+	sros "github.com/232425wxy/BFT/libs/os"
+	nm "github.com/232425wxy/BFT/node"
 )
 
 // AddNodeFlags 在命令行中暴露了一些常见的配置选项，这些是为了方便嵌入SRBFT节点的命令而公开的：

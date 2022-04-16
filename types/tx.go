@@ -1,10 +1,10 @@
 package types
 
 import (
-	"BFT/crypto/merkle"
-	"BFT/crypto/srhash"
-	srbytes "BFT/libs/bytes"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

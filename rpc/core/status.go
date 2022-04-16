@@ -3,10 +3,10 @@ package core
 import (
 	"time"
 
-	srbytes "BFT/libs/bytes"
-	coretypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
-	"BFT/types"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 // Status returns SRBFT status including node info, pubkey, latest block

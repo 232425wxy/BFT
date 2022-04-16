@@ -1,7 +1,7 @@
 package protoio_test
 
 import (
-	"BFT/libs/protoio"
+	"github.com/232425wxy/BFT/libs/protoio"
 	"bytes"
 	"encoding/binary"
 	"fmt"

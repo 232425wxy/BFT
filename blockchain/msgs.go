@@ -1,13 +1,13 @@
 package blockchain
 
 import (
-	protoblockchain "BFT/proto/blockchain"
+	protoblockchain "github.com/232425wxy/BFT/proto/blockchain"
 	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 
-	"BFT/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 const (

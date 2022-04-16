@@ -1,9 +1,9 @@
 package gossip
 
 import (
-	"BFT/libs/cmap"
-	"BFT/libs/log"
-	"BFT/libs/service"
+	"github.com/232425wxy/BFT/libs/cmap"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/service"
 	"fmt"
 	"net"
 	"sync"

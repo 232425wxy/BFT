@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"BFT/gossip"
-	coretypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/gossip"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 )
 
 // NetInfo returns network info.

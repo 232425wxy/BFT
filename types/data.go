@@ -1,9 +1,9 @@
 package types
 
 import (
-	srbytes "BFT/libs/bytes"
-	srmath "BFT/libs/math"
-	"BFT/proto/types"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	"github.com/232425wxy/BFT/proto/types"
 	"errors"
 	"fmt"
 	"strings"

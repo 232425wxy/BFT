@@ -1,9 +1,9 @@
 package txindex
 
 import (
-	"BFT/libs/service"
-	"BFT/state/indexer"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/state/indexer"
+	"github.com/232425wxy/BFT/types"
 	"context"
 )
 

@@ -1,7 +1,7 @@
 package types
 
 import (
-	"BFT/libs/bytes"
+	"github.com/232425wxy/BFT/libs/bytes"
 	gogotypes "github.com/gogo/protobuf/types"
 )
 

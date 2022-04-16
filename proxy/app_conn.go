@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	abcicli "BFT/abci/client"
-	protoabci "BFT/proto/abci"
+	abcicli "github.com/232425wxy/BFT/abci/client"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 )
 
 type AppConnConsensus struct {

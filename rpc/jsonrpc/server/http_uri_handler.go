@@ -1,9 +1,9 @@
 package server
 
 import (
-	srjson "BFT/libs/json"
-	"BFT/libs/log"
-	"BFT/rpc/jsonrpc/types"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"encoding/hex"
 	"fmt"
 	"net/http"

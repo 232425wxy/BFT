@@ -1,8 +1,8 @@
 package types
 
 import (
-	"BFT/crypto/srhash"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"errors"
 	"fmt"
 )

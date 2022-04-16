@@ -1,8 +1,8 @@
 package store
 
 import (
-	protostore "BFT/proto/store"
-	types2 "BFT/proto/types"
+	protostore "github.com/232425wxy/BFT/proto/store"
+	types2 "github.com/232425wxy/BFT/proto/types"
 	"fmt"
 	"strconv"
 	"sync"
@@ -10,7 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	dbm "github.com/tendermint/tm-db"
 
-	"BFT/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 type BlockStore struct {

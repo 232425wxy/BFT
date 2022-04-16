@@ -1,8 +1,8 @@
 package crypto
 
 import (
-	"BFT/crypto/srhash"
-	"BFT/libs/bytes"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	"github.com/232425wxy/BFT/libs/bytes"
 )
 
 const (

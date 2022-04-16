@@ -2,8 +2,8 @@
 package server
 
 import (
-	"BFT/libs/log"
-	"BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"bufio"
 	"encoding/json"
 	"errors"

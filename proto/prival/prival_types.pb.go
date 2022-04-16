@@ -4,8 +4,8 @@
 package prival
 
 import (
-	"BFT/proto/crypto"
-	"BFT/proto/types"
+	"github.com/232425wxy/BFT/proto/crypto"
+	"github.com/232425wxy/BFT/proto/types"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"

@@ -1,8 +1,8 @@
 package merkle
 
 import (
-	"BFT/crypto/srhash"
-	pbcrypto "BFT/proto/crypto"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	pbcrypto "github.com/232425wxy/BFT/proto/crypto"
 	"bytes"
 	"errors"
 	"fmt"

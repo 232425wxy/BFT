@@ -1,7 +1,7 @@
 package types
 
 import (
-	srjson "BFT/libs/json"
+	srjson "github.com/232425wxy/BFT/libs/json"
 	"context"
 	"encoding/json"
 	"fmt"

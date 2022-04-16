@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	cfg "BFT/config"
-	"BFT/consensus"
-	"BFT/crypto"
-	"BFT/gossip"
-	"BFT/libs/log"
-	mempl "BFT/mempool"
-	"BFT/proxy"
-	sm "BFT/state"
-	"BFT/state/indexer"
-	"BFT/state/txindex"
-	"BFT/types"
+	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/consensus"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/log"
+	mempl "github.com/232425wxy/BFT/mempool"
+	"github.com/232425wxy/BFT/proxy"
+	sm "github.com/232425wxy/BFT/state"
+	"github.com/232425wxy/BFT/state/indexer"
+	"github.com/232425wxy/BFT/state/txindex"
+	"github.com/232425wxy/BFT/types"
 )
 
 const (

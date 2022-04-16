@@ -4,7 +4,7 @@
 package types
 
 import (
-	crypto "BFT/proto/crypto"
+	crypto "github.com/232425wxy/BFT/proto/crypto"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"

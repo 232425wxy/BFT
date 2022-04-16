@@ -1,12 +1,12 @@
 package mempool
 
 import (
-	"BFT/config"
-	"BFT/gossip"
-	"BFT/libs/clist"
-	srlog "BFT/libs/log"
-	protomem "BFT/proto/mempool"
-	"BFT/types"
+	"github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/clist"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	protomem "github.com/232425wxy/BFT/proto/mempool"
+	"github.com/232425wxy/BFT/types"
 	"errors"
 	"fmt"
 	"time"

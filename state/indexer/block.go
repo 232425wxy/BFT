@@ -1,8 +1,8 @@
 package indexer
 
 import (
-	"BFT/libs/pubsub/query"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/pubsub/query"
+	"github.com/232425wxy/BFT/types"
 	"context"
 )
 

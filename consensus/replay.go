@@ -1,12 +1,12 @@
 package consensus
 
 import (
-	"BFT/crypto/merkle"
-	srlog "BFT/libs/log"
-	protoabci "BFT/proto/abci"
-	"BFT/proxy"
-	sm "BFT/state"
-	"BFT/types"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	"github.com/232425wxy/BFT/proxy"
+	sm "github.com/232425wxy/BFT/state"
+	"github.com/232425wxy/BFT/types"
 	"bytes"
 	"fmt"
 	"hash/crc32"

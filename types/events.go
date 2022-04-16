@@ -1,10 +1,10 @@
 package types
 
 import (
-	srjson "BFT/libs/json"
-	srpubsub "BFT/libs/pubsub"
-	srquery "BFT/libs/pubsub/query"
-	protoabci "BFT/proto/abci"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	srpubsub "github.com/232425wxy/BFT/libs/pubsub"
+	srquery "github.com/232425wxy/BFT/libs/pubsub/query"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"fmt"
 )
 
@@ -46,15 +46,15 @@ type CREventData interface {
 }
 
 func init() {
-	srjson.RegisterType(EventDataNewBlock{}, "BFT/event/NewBlock")
-	srjson.RegisterType(EventDataNewBlockHeader{}, "BFT/event/NewBlockHeader")
-	srjson.RegisterType(EventDataTx{}, "BFT/event/Tx")
-	srjson.RegisterType(EventDataRoundState{}, "BFT/event/RoundState")
-	srjson.RegisterType(EventDataNewRound{}, "BFT/event/NewRound")
-	srjson.RegisterType(EventDataCompleteProposal{}, "BFT/event/CompleteProposal")
-	srjson.RegisterType(EventDataVote{}, "BFT/event/Vote")
-	srjson.RegisterType(EventDataValidatorSetUpdates{}, "BFT/event/ValidatorSetUpdates")
-	srjson.RegisterType(EventDataString(""), "BFT/event/ProposalString")
+	srjson.RegisterType(EventDataNewBlock{}, "github.com/232425wxy/BFT/event/NewBlock")
+	srjson.RegisterType(EventDataNewBlockHeader{}, "github.com/232425wxy/BFT/event/NewBlockHeader")
+	srjson.RegisterType(EventDataTx{}, "github.com/232425wxy/BFT/event/Tx")
+	srjson.RegisterType(EventDataRoundState{}, "github.com/232425wxy/BFT/event/RoundState")
+	srjson.RegisterType(EventDataNewRound{}, "github.com/232425wxy/BFT/event/NewRound")
+	srjson.RegisterType(EventDataCompleteProposal{}, "github.com/232425wxy/BFT/event/CompleteProposal")
+	srjson.RegisterType(EventDataVote{}, "github.com/232425wxy/BFT/event/Vote")
+	srjson.RegisterType(EventDataValidatorSetUpdates{}, "github.com/232425wxy/BFT/event/ValidatorSetUpdates")
+	srjson.RegisterType(EventDataString(""), "github.com/232425wxy/BFT/event/ProposalString")
 }
 
 // Most event messages are basic types (a block, a transaction)

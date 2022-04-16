@@ -1,7 +1,7 @@
 package query_test
 
 import (
-	"BFT/libs/pubsub/query"
+	"github.com/232425wxy/BFT/libs/pubsub/query"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

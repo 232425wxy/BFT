@@ -1,7 +1,7 @@
 package merkle
 
 import (
-	pbcrypto "BFT/proto/crypto"
+	pbcrypto "github.com/232425wxy/BFT/proto/crypto"
 	"bytes"
 	"errors"
 	"fmt"

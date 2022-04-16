@@ -1,10 +1,10 @@
 package state
 
 import (
-	srtime "BFT/libs/time"
-	protostate "BFT/proto/state"
-	prototypes "BFT/proto/types"
-	"BFT/types"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	protostate "github.com/232425wxy/BFT/proto/state"
+	prototypes "github.com/232425wxy/BFT/proto/types"
+	"github.com/232425wxy/BFT/types"
 	"bytes"
 	"errors"
 	"fmt"

@@ -1,8 +1,8 @@
 package state
 
 import (
-	"BFT/crypto"
-	"BFT/types"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/types"
 	"bytes"
 	"errors"
 	"fmt"

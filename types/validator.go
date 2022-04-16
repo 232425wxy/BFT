@@ -1,9 +1,9 @@
 package types
 
 import (
-	"BFT/crypto"
-	cryptoenc "BFT/crypto/encoding"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto"
+	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"errors"
 	"fmt"
 )

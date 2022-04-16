@@ -4,10 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	cmd "BFT/cmd/commands"
-	cfg "BFT/config"
-	"BFT/libs/cli"
-	nm "BFT/node"
+	cmd "github.com/232425wxy/BFT/cmd/commands"
+	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/libs/cli"
+	nm "github.com/232425wxy/BFT/node"
 )
 
 func main() {

@@ -1,12 +1,12 @@
 package types
 
 import (
-	"BFT/crypto"
-	"BFT/libs/bits"
-	srbytes "BFT/libs/bytes"
-	srjson "BFT/libs/json"
-	"BFT/libs/protoio"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/libs/bits"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	"github.com/232425wxy/BFT/libs/protoio"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

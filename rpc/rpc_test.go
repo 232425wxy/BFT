@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	httprpc "BFT/rpc/client/http"
+	httprpc "github.com/232425wxy/BFT/rpc/client/http"
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"

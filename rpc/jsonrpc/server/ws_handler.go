@@ -1,9 +1,9 @@
 package server
 
 import (
-	"BFT/libs/log"
-	"BFT/libs/service"
-	"BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"context"
 	"encoding/json"
 	"errors"

@@ -1,16 +1,16 @@
 package core
 
 import (
-	protoabci "BFT/proto/abci"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"context"
 	"errors"
 	"fmt"
 	"time"
 
-	mempl "BFT/mempool"
-	ctypes "BFT/rpc/core/types"
-	rpctypes "BFT/rpc/jsonrpc/types"
-	"BFT/types"
+	mempl "github.com/232425wxy/BFT/mempool"
+	ctypes "github.com/232425wxy/BFT/rpc/core/types"
+	rpctypes "github.com/232425wxy/BFT/rpc/jsonrpc/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 //-----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 package merkle
 
-import "BFT/crypto/srhash"
+import "github.com/232425wxy/BFT/crypto/srhash"
 
 var (
 	leafPrefix  = []byte{0}

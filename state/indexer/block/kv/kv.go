@@ -1,10 +1,10 @@
 package kv
 
 import (
-	"BFT/libs/pubsub/query"
-	protoabci "BFT/proto/abci"
-	"BFT/state/indexer"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/pubsub/query"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	"github.com/232425wxy/BFT/state/indexer"
+	"github.com/232425wxy/BFT/types"
 	"context"
 	"errors"
 	"fmt"

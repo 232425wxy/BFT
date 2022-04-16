@@ -1,10 +1,10 @@
 package gossip
 
 import (
-	srcrypto "BFT/crypto"
-	sred25519 "BFT/crypto/ed25519"
-	srjson "BFT/libs/json"
-	sros "BFT/libs/os"
+	srcrypto "github.com/232425wxy/BFT/crypto"
+	sred25519 "github.com/232425wxy/BFT/crypto/ed25519"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	sros "github.com/232425wxy/BFT/libs/os"
 	"encoding/hex"
 	"io/ioutil"
 )

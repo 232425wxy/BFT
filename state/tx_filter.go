@@ -1,8 +1,8 @@
 package state
 
 import (
-	"BFT/mempool"
-	"BFT/types"
+	"github.com/232425wxy/BFT/mempool"
+	"github.com/232425wxy/BFT/types"
 )
 
 // TxPreCheck 几乎就在套娃：

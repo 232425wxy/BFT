@@ -1,8 +1,8 @@
 package types
 
 import (
-	srtime "BFT/libs/time"
-	"BFT/proto/types"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	"github.com/232425wxy/BFT/proto/types"
 	"time"
 )
 

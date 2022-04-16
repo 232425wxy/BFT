@@ -1,12 +1,12 @@
 package consensus
 
 import (
-	"BFT/gossip"
-	"BFT/libs/bits"
-	srmath "BFT/libs/math"
-	protoconsensus "BFT/proto/consensus"
-	prototypes "BFT/proto/types"
-	"BFT/types"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/bits"
+	srmath "github.com/232425wxy/BFT/libs/math"
+	protoconsensus "github.com/232425wxy/BFT/proto/consensus"
+	prototypes "github.com/232425wxy/BFT/proto/types"
+	"github.com/232425wxy/BFT/types"
 	"errors"
 	"fmt"
 	"github.com/gogo/protobuf/proto"

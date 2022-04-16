@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"BFT/gossip"
-	srtime "BFT/libs/time"
+	"github.com/232425wxy/BFT/gossip"
+	srtime "github.com/232425wxy/BFT/libs/time"
 	"fmt"
 	"net"
 	"os"
@@ -10,9 +10,9 @@ import (
 	"strings"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cfg "BFT/config"
-	srrand "BFT/libs/rand"
-	"BFT/types"
+	cfg "github.com/232425wxy/BFT/config"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/types"
 )
 
 var (

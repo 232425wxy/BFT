@@ -1,9 +1,9 @@
 package main
 
 import (
-	"BFT/libs/json"
-	srrpc "BFT/rpc/client/http"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/json"
+	srrpc "github.com/232425wxy/BFT/rpc/client/http"
+	"github.com/232425wxy/BFT/types"
 	"context"
 	"fmt"
 	"time"

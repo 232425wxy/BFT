@@ -1,9 +1,9 @@
 package types
 
 import (
-	"BFT/crypto/srhash"
-	srbytes "BFT/libs/bytes"
-	"BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

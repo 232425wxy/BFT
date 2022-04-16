@@ -1,9 +1,9 @@
 package gossip
 
 import (
-	"BFT/crypto"
-	srbytes "BFT/libs/bytes"
-	protogossip "BFT/proto/gossip"
+	"github.com/232425wxy/BFT/crypto"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"bytes"
 	"errors"
 	"fmt"

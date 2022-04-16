@@ -1,15 +1,15 @@
 package coretypes
 
 import (
-	protoabci "BFT/proto/abci"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"encoding/json"
 	"time"
 
-	"BFT/crypto"
-	"BFT/gossip"
-	"BFT/libs/bytes"
-	tmproto "BFT/proto/types"
-	"BFT/types"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/gossip"
+	"github.com/232425wxy/BFT/libs/bytes"
+	tmproto "github.com/232425wxy/BFT/proto/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 // List of blocks

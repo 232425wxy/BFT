@@ -1,10 +1,10 @@
 package types
 
 import (
-	"BFT/libs/log"
-	srpubsub "BFT/libs/pubsub"
-	"BFT/libs/service"
-	protoabci "BFT/proto/abci"
+	"github.com/232425wxy/BFT/libs/log"
+	srpubsub "github.com/232425wxy/BFT/libs/pubsub"
+	"github.com/232425wxy/BFT/libs/service"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"context"
 	"fmt"
 )

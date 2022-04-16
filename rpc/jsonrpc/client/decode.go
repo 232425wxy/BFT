@@ -1,8 +1,8 @@
 package client
 
 import (
-	srjson "BFT/libs/json"
-	types "BFT/rpc/jsonrpc/types"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	types "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"encoding/json"
 	"errors"
 	"fmt"

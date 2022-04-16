@@ -4,8 +4,8 @@
 package consensus
 
 import (
-	bits "BFT/proto/libs/bits"
-	types "BFT/proto/types"
+	bits "github.com/232425wxy/BFT/proto/libs/bits"
+	types "github.com/232425wxy/BFT/proto/types"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"

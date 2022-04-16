@@ -4,7 +4,7 @@
 package types
 
 import (
-	"BFT/proto/crypto"
+	"github.com/232425wxy/BFT/proto/crypto"
 	encoding_binary "encoding/binary"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"

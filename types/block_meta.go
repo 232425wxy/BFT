@@ -1,7 +1,7 @@
 package types
 
 import (
-	prototypes "BFT/proto/types"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"

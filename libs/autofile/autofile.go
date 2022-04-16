@@ -1,7 +1,7 @@
 package autofile
 
 import (
-	srrand "BFT/libs/rand"
+	srrand "github.com/232425wxy/BFT/libs/rand"
 	"os"
 	"os/signal"
 	"path/filepath"

@@ -1,14 +1,14 @@
 package commands
 
 import (
-	"BFT/gossip"
-	srtime "BFT/libs/time"
+	"github.com/232425wxy/BFT/gossip"
+	srtime "github.com/232425wxy/BFT/libs/time"
 	"fmt"
 	"github.com/spf13/cobra"
-	cfg "BFT/config"
-	sros "BFT/libs/os"
-	srrand "BFT/libs/rand"
-	"BFT/types"
+	cfg "github.com/232425wxy/BFT/config"
+	sros "github.com/232425wxy/BFT/libs/os"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/types"
 )
 
 // InitFilesCmd initialises a fresh SRBFT Core instance.

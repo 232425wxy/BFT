@@ -1,10 +1,10 @@
 package encoding
 
 import (
-	"BFT/crypto"
-	"BFT/crypto/ed25519"
-	"BFT/libs/json"
-	pc "BFT/proto/crypto"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/crypto/ed25519"
+	"github.com/232425wxy/BFT/libs/json"
+	pc "github.com/232425wxy/BFT/proto/crypto"
 	"fmt"
 )
 

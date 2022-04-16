@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"BFT/config"
-	"BFT/libs/cmap"
-	"BFT/libs/rand"
-	"BFT/libs/service"
+	"github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/libs/cmap"
+	"github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/libs/service"
 )
 
 const (

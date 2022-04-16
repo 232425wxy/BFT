@@ -4,7 +4,7 @@
 package gossip
 
 import (
-	crypto "BFT/proto/crypto"
+	crypto "github.com/232425wxy/BFT/proto/crypto"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"

@@ -23,9 +23,9 @@ implementation.
 import (
 	"context"
 
-	"BFT/libs/service"
-	coretypes "BFT/rpc/core/types"
-	"BFT/types"
+	"github.com/232425wxy/BFT/libs/service"
+	coretypes "github.com/232425wxy/BFT/rpc/core/types"
+	"github.com/232425wxy/BFT/types"
 )
 
 // Client wraps most important rpc calls a client would make if you want to
@@ -111,7 +111,7 @@ type NetworkClient interface {
 }
 
 // EventsClient is reactive, you can subscribe to any message, given the proper
-// string. see BFT/types/events.go
+// string. see github.com/232425wxy/BFT/types/events.go
 type EventsClient interface {
 	// Subscribe subscribes given subscriber to query. Returns a channel with
 	// cap=1 onto which events are published. An error is returned if it fails to

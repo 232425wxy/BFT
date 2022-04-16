@@ -1,7 +1,7 @@
 package core
 
 import (
-	rpc "BFT/rpc/jsonrpc/server"
+	rpc "github.com/232425wxy/BFT/rpc/jsonrpc/server"
 )
 
 // TODO: better system than "unsafe" prefix

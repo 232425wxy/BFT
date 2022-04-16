@@ -1,11 +1,11 @@
 package types
 
 import (
-	"BFT/crypto"
-	"BFT/crypto/ed25519"
-	cryptoenc "BFT/crypto/encoding"
-	protoabci "BFT/proto/abci"
-	prototypes "BFT/proto/types"
+	"github.com/232425wxy/BFT/crypto"
+	"github.com/232425wxy/BFT/crypto/ed25519"
+	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 )
 
 //-------------------------------------------------------
