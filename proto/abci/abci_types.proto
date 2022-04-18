@@ -7,11 +7,9 @@ package abci;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "BFT/proto/types/types_types.proto";
+import "BFT/proto/types/validator.proto";
 import "BFT/proto/crypto/keys.proto";
 
-// This file is copied from http://github.com/tendermint/abci
-// NOTE: When using custom types, mind the warnings.
-// https://github.com/gogo/protobuf/blob/master/custom_types.md#warnings-and-issues
 
 //----------------------------------------
 // Request types
@@ -228,8 +226,10 @@ message Validator {
 
 // ValidatorUpdate
 message ValidatorUpdate {
-  crypto.PublicKey            pub_key = 1 [(gogoproto.nullable) = false];
+  crypto.PublicKey            pubKey = 1 [(gogoproto.nullable) = false];
   double                      power = 2;
+  types.ValidatorType         type = 3;
+  int64                       height = 4;
 }
 
 // VoteInfo
@@ -255,4 +255,4 @@ service ABCIApplication {
   rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
 }
 
-// 命令：protoc --gofast_out=plugins=grpc:. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src -I=$GOPATH/src/BFT/proto/types abci_types.proto
+// 命令：protoc --gogofaster_out=plugins=grpc:. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src -I=$GOPATH/src/BFT/proto/types abci_types.proto

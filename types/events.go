@@ -1,11 +1,11 @@
 package types
 
 import (
+	"fmt"
 	srjson "github.com/232425wxy/BFT/libs/json"
 	srpubsub "github.com/232425wxy/BFT/libs/pubsub"
 	srquery "github.com/232425wxy/BFT/libs/pubsub/query"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
-	"fmt"
 )
 
 // Reserved event types (alphabetically sorted).
@@ -29,13 +29,13 @@ const (
 	EventNewRoundStep     = "NewRoundStep"
 	EventPolka            = "Polka"
 	EventRelock           = "Relock"
-	EventTimeoutPropose   = "TimeoutPropose"
+	EventTimeoutPropose   = "TimeoutPrePrepare"
 	EventTimeoutWait      = "TimeoutWait"
 	EventUnlock           = "Unlock"
 	EventValidBlock       = "ValidBlock"
 	EventVote             = "Vote"
 
-	EventReputation       = "Reputation"
+	EventTrust = "EventTrust"
 )
 
 // ENCODING / DECODING

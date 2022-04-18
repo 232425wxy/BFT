@@ -65,7 +65,6 @@ func AddNodeFlags(cmd *cobra.Command) {
 		"db_dir",
 		config.DBPath,
 		"database directory")
-	cmd.Flags().Bool("consensus.evaluation", config.Consensus.Evaluation, "Decide whether to conduct a credit assessment")
 }
 
 // NewRunNodeCmd returns the command that allows the CLI to start a node.

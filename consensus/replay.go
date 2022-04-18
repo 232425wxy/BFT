@@ -1,14 +1,14 @@
 package consensus
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/232425wxy/BFT/crypto/merkle"
 	srlog "github.com/232425wxy/BFT/libs/log"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"github.com/232425wxy/BFT/proxy"
 	sm "github.com/232425wxy/BFT/state"
 	"github.com/232425wxy/BFT/types"
-	"bytes"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"reflect"
@@ -118,7 +118,7 @@ func (cs *State) catchupReplay(csHeight int64) error {
 	}
 	gr, found, err = cs.wal.SearchForEndHeight(endHeight, &WALSearchOptions{IgnoreDataCorruptionErrors: true})
 	if err == io.EOF {
-		cs.Logger.Errorw("Replay: wal.group.Search returned EOF", "#ENDHEIGHT", endHeight)
+		cs.Logger.Warnw("Replay: wal.group.Search returned EOF", "#ENDHEIGHT", endHeight)
 	} else if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ LOOP:
 		case err == io.EOF:
 			break LOOP
 		case IsDataCorruptionError(err):
-			cs.Logger.Errorw("data has been corrupted in last height of consensus WAL", "err", err, "height", csHeight)
+			cs.Logger.Warnw("data has been corrupted in last height of consensus WAL", "err", err, "height", csHeight)
 			return err
 		case err != nil:
 			return err

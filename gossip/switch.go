@@ -203,7 +203,7 @@ func (sw *Switch) OnStop() {
 	sw.Logger.Debugw("Switch: Stopping reactors")
 	for _, reactor := range sw.reactors {
 		if err := reactor.Stop(); err != nil {
-			sw.Logger.Errorw("error while stopped reactor", "reactor", reactor, "error", err)
+			sw.Logger.Warnw("error while stopped reactor", "reactor", reactor, "error", err)
 		}
 	}
 }
@@ -263,7 +263,7 @@ func (sw *Switch) StopPeerForError(peer *Peer, reason interface{}) {
 		return
 	}
 
-	sw.Logger.Errorw("Stopping Peer for error", "Peer", peer, "err", reason)
+	sw.Logger.Warnw("Stopping Peer for error", "Peer", peer, "err", reason)
 	sw.stopAndRemovePeer(peer, reason)
 
 	if peer.IsPersistent() {
@@ -274,7 +274,7 @@ func (sw *Switch) StopPeerForError(peer *Peer, reason interface{}) {
 			var err error
 			addr, err = peer.NodeInfo().NetAddress()
 			if err != nil {
-				sw.Logger.Errorw("Wanted to reconnect to inbound Peer, but self-reported address is wrong",
+				sw.Logger.Warnw("Wanted to reconnect to inbound Peer, but self-reported address is wrong",
 					"Peer", peer, "err", err)
 				return
 			}
@@ -286,7 +286,7 @@ func (sw *Switch) StopPeerForError(peer *Peer, reason interface{}) {
 func (sw *Switch) stopAndRemovePeer(peer *Peer, reason interface{}) {
 	sw.transport.Cleanup(peer)
 	if err := peer.Stop(); err != nil {
-		sw.Logger.Errorw("error while stopping Peer", "error", err) // TODO: should return error to be handled accordingly
+		sw.Logger.Warnw("error while stopping Peer", "error", err) // TODO: should return error to be handled accordingly
 	}
 
 	for _, reactor := range sw.reactors {
@@ -327,7 +327,7 @@ func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 		continue
 	}
 
-	sw.Logger.Errorw("Failed to reconnect to Peer. Beginning exponential backoff", "addr", addr, "elapsed", time.Since(start))
+	sw.Logger.Warnw("Failed to reconnect to Peer. Beginning exponential backoff", "addr", addr, "elapsed", time.Since(start))
 	for i := 0; i < reconnectBackOffAttempts; i++ {
 		if !sw.IsRunning() {
 			return
@@ -345,7 +345,7 @@ func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 		}
 		sw.Logger.Infow("Error reconnecting to Peer. Trying again", "tries", i, "err", err, "addr", addr)
 	}
-	sw.Logger.Errorw("Failed to reconnect to Peer. Giving up", "addr", addr, "elapsed", time.Since(start))
+	sw.Logger.Warnw("Failed to reconnect to Peer. Giving up", "addr", addr, "elapsed", time.Since(start))
 }
 
 // SetAddrBook 给 Switch 设置地址簿
@@ -373,7 +373,7 @@ func (sw *Switch) DialPeersAsync(peers []string) error {
 	netAddrs, errs := NewNetAddressStrings(peers)
 	// report all the errors
 	for _, err := range errs {
-		sw.Logger.Errorw("Error in Peer's address", "err", err)
+		sw.Logger.Warnw("Error in Peer's address", "err", err)
 	}
 	// return first non-ErrNetAddressLookup error
 	for _, err := range errs {
@@ -398,7 +398,7 @@ func (sw *Switch) dialPeersAsync(netAddrs []*NetAddress) {
 					if isPrivateAddr(err) {
 						sw.Logger.Debugw("Won't add Peer's address to addrbook", "err", err)
 					} else {
-						sw.Logger.Errorw("Can't add Peer's address to addrbook", "err", err)
+						sw.Logger.Warnw("Can't add Peer's address to addrbook", "err", err)
 					}
 				}
 			}
@@ -427,7 +427,7 @@ func (sw *Switch) dialPeersAsync(netAddrs []*NetAddress) {
 				case ErrSwitchConnectToSelf, ErrSwitchDuplicatePeerID, ErrCurrentlyDialingOrExistingAddress:
 					sw.Logger.Debugw("Error dialing Peer", "err", err)
 				default:
-					sw.Logger.Errorw("Error dialing Peer", "err", err)
+					sw.Logger.Warnw("Error dialing Peer", "err", err)
 				}
 			}
 		}(i)
@@ -466,7 +466,7 @@ func (sw *Switch) AddPersistentPeers(addrs []string) error {
 	netAddrs, errs := NewNetAddressStrings(addrs)
 
 	for _, err := range errs {
-		sw.Logger.Errorw("Error in Peer's address", "err", err)
+		sw.Logger.Warnw("Error in Peer's address", "err", err)
 	}
 	// 返回第一个非 ErrNetAddressLookup 的错误
 	for _, err := range errs {
@@ -533,19 +533,19 @@ func (sw *Switch) acceptRoutine() {
 
 				continue
 			case ErrFilterTimeout:
-				sw.Logger.Errorw(
+				sw.Logger.Warnw(
 					"Peer filter timed out",
 					"err", err,
 				)
 
 				continue
 			case ErrTransportClosed:
-				sw.Logger.Errorw(
+				sw.Logger.Warnw(
 					"Stopped accept routine, as transport is closed",
 					"numPeers", sw.peers.Size(),
 				)
 			default:
-				sw.Logger.Errorw(
+				sw.Logger.Warnw(
 					"Accept on transport errored",
 					"err", err,
 					"numPeers", sw.peers.Size(),
@@ -636,7 +636,7 @@ func (sw *Switch) addPeer(p *Peer) error {
 
 	// 处理 Switch 已停止但我们还想试图添加对等点的情况。
 	if !sw.IsRunning() {
-		sw.Logger.Errorw("Won't start a Peer - switch is not running", "Peer", p)
+		sw.Logger.Warnw("Won't start a Peer - switch is not running", "Peer", p)
 		return nil
 	}
 
@@ -650,7 +650,7 @@ func (sw *Switch) addPeer(p *Peer) error {
 	err := p.Start()
 	if err != nil {
 		// Should never happen
-		sw.Logger.Errorw("Error starting Peer", "err", err, "Peer", p)
+		sw.Logger.Warnw("Error starting Peer", "err", err, "Peer", p)
 		return err
 	}
 

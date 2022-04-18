@@ -2,6 +2,7 @@ syntax = "proto3";
 package gossip;
 
 import "gogoproto/gogo.proto";
+import "BFT/proto/crypto/keys.proto";
 
 message NetAddress {
   string id = 1 [(gogoproto.customname) = "ID"];
@@ -14,14 +15,7 @@ message NodeInfo {
   string               listen_addr = 2;
   string               network = 3;
   bytes                channels = 4;
-  bytes                address = 5;
-  string               moniker = 6;
-  NodeInfoOther other = 7 [(gogoproto.nullable) = false];
+  crypto.PublicKey     pubKey = 5 [(gogoproto.nullable) = false];
 }
 
-message NodeInfoOther {
-  string tx_index = 1;
-  string rpc_address = 2 [(gogoproto.customname) = "RPCAddress"];
-}
-
-// 命令：protoc --gofast_out=. -I=. -I=$GOPATH/src/github.com p2p_types.proto
+// 命令：protoc --gogofaster_out=. -I=. -I=$GOPATH/src/github.com -I=$GOPATH/src gossip.proto

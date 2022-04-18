@@ -1,6 +1,9 @@
 package state
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
 	srlog "github.com/232425wxy/BFT/libs/log"
 	"github.com/232425wxy/BFT/mempool"
@@ -9,9 +12,6 @@ import (
 	prototypes "github.com/232425wxy/BFT/proto/types"
 	"github.com/232425wxy/BFT/proxy"
 	"github.com/232425wxy/BFT/types"
-	"bytes"
-	"errors"
-	"fmt"
 )
 
 /*
@@ -203,7 +203,7 @@ func (blockExec *BlockExecutor) Commit(
 	// 向 ABCI 发送 RequestFlush{} 消息
 	err := blockExec.mempool.FlushAppConn()
 	if err != nil {
-		blockExec.logger.Errorw("client error during mempool.FlushAppConn", "err", err)
+		blockExec.logger.Warnw("client error during mempool.FlushAppConn", "err", err)
 		return nil, err
 	}
 
@@ -211,7 +211,7 @@ func (blockExec *BlockExecutor) Commit(
 	// 向 ABCI 发送 RequestCommit{} 消息，然后得到 ResponseCommit{} 消息
 	res, err := blockExec.proxyApp.CommitSync()
 	if err != nil {
-		blockExec.logger.Errorw("client error during proxyAppConn.CommitSync", "err", err)
+		blockExec.logger.Warnw("client error during proxyAppConn.CommitSync", "err", err)
 		return nil, err
 	}
 
@@ -302,7 +302,7 @@ func execBlockOnProxyApp(logger srlog.CRLogger, proxyAppConn *proxy.AppConnConse
 		LastCommitInfo:      commitInfo,
 	})
 	if err != nil {
-		logger.Errorw("error in proxyAppConn.BeginBlock", "err", err)
+		logger.Warnw("error in proxyAppConn.BeginBlock", "err", err)
 		return nil, err
 	}
 
@@ -319,7 +319,7 @@ func execBlockOnProxyApp(logger srlog.CRLogger, proxyAppConn *proxy.AppConnConse
 	// 然后更新后的 validator 集合会参加一个高度的共识过程
 	abciResponses.EndBlock, err = proxyAppConn.EndBlockSync(protoabci.RequestEndBlock{Height: block.Height})
 	if err != nil {
-		logger.Errorw("error in proxyAppConn.EndBlock", "err", err)
+		logger.Warnw("error in proxyAppConn.EndBlock", "err", err)
 		return nil, err
 	}
 
@@ -411,8 +411,12 @@ func updateState(state State, blockID types.BlockID, header *types.Header, abciR
 	// 如果当前存在其投票权不为0则更新
 	lastHeightValsChanged := state.LastHeightValidatorsChanged
 	if len(validatorUpdates) > 0 { // validatorUpdates 表示状态改变的 validator 集合
+		//for _, v := range validatorUpdates {
+		//	fmt.Println("------------------>>>>>>>>>>>", v.Address, v.VotingPower, v.Type)
+		//}
 		// 此处的 validatorUpdates 经过了完整性检查，是原生格式的，它是由客户端应用程序返回的
 		err := nValSet.UpdateWithChangeSet(validatorUpdates)
+
 		if err != nil {
 			return state, fmt.Errorf("error changing validator set: %v", err)
 		}
@@ -458,7 +462,7 @@ func fireEvents(
 		ResultBeginBlock: *abciResponses.BeginBlock,
 		ResultEndBlock:   *abciResponses.EndBlock,
 	}); err != nil {
-		logger.Errorw("failed publishing new block", "err", err)
+		logger.Warnw("failed publishing new block", "err", err)
 	}
 
 	if err := eventBus.PublishEventNewBlockHeader(types.EventDataNewBlockHeader{
@@ -467,7 +471,7 @@ func fireEvents(
 		ResultBeginBlock: *abciResponses.BeginBlock,
 		ResultEndBlock:   *abciResponses.EndBlock,
 	}); err != nil {
-		logger.Errorw("failed publishing new block header", "err", err)
+		logger.Warnw("failed publishing new block header", "err", err)
 	}
 
 	for i, tx := range block.Data.Txs {
@@ -477,14 +481,14 @@ func fireEvents(
 			Tx:     tx,
 			Result: *(abciResponses.DeliverTxs[i]),
 		}}); err != nil {
-			logger.Errorw("failed publishing event TX", "err", err)
+			logger.Warnw("failed publishing event TX", "err", err)
 		}
 	}
 
 	if len(validatorUpdates) > 0 {
 		if err := eventBus.PublishEventValidatorSetUpdates(
 			types.EventDataValidatorSetUpdates{ValidatorUpdates: validatorUpdates}); err != nil {
-			logger.Errorw("failed publishing event", "err", err)
+			logger.Warnw("failed publishing event", "err", err)
 		}
 	}
 }
@@ -498,14 +502,14 @@ func ExecBlock(
 ) ([]byte, error) {
 	_, err := execBlockOnProxyApp(logger, appConnConsensus, block, store, initialHeight)
 	if err != nil {
-		logger.Errorw("failed executing block on proxy app", "height", block.Height, "err", err)
+		logger.Warnw("failed executing block on proxy app", "height", block.Height, "err", err)
 		return nil, err
 	}
 
 	// Reply block, get hash back
 	res, err := appConnConsensus.CommitSync()
 	if err != nil {
-		logger.Errorw("client error during proxyAppConn.CommitSync", "err", res)
+		logger.Warnw("client error during proxyAppConn.CommitSync", "err", res)
 		return nil, err
 	}
 

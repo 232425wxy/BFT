@@ -1,19 +1,19 @@
 package mempool
 
 import (
+	"errors"
+	"fmt"
 	"github.com/232425wxy/BFT/config"
 	"github.com/232425wxy/BFT/gossip"
 	"github.com/232425wxy/BFT/libs/clist"
 	srlog "github.com/232425wxy/BFT/libs/log"
 	protomem "github.com/232425wxy/BFT/proto/mempool"
 	"github.com/232425wxy/BFT/types"
-	"errors"
-	"fmt"
 	"time"
 )
 
 const (
-	MempoolChannel = byte(0x30)
+	MempoolChannel = byte(0x06)
 
 	peerCatchupSleepIntervalMS = 100 // If peer is behind, sleep this amount
 )
@@ -95,7 +95,7 @@ func (memR *Reactor) RemovePeer(peer *gossip.Peer, reason interface{}) {
 func (memR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 	msg, err := memR.decodeMsg(msgBytes)
 	if err != nil {
-		memR.Logger.Errorw("Error decoding message", "src", src, "chId", chID, "err", err)
+		memR.Logger.Warnw("Error decoding message", "src", src, "chId", chID, "err", err)
 		// 解码错误，就把发送这个消息的 peer 给关了
 		memR.Switch.StopPeerForError(src, err)
 		return
@@ -106,9 +106,9 @@ func (memR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 	for _, tx := range msg.Txs {
 		err = memR.mempool.CheckTx(tx, nil, txInfo) // 检查 peer 发送过来的每个 tx
 		if err == ErrTxInCache {
-			memR.Logger.Debugw("Tx already exists in cache", "tx", txID(tx))
+			//memR.Logger.Warnw("Tx already exists in cache", "tx", txID(tx))
 		} else if err != nil {
-			memR.Logger.Infow("Could not check tx", "tx", txID(tx), "err", err)
+			memR.Logger.Warnw("Could not check tx", "tx", txID(tx), "err", err)
 		}
 	}
 	// broadcasting happens from go routines per peer

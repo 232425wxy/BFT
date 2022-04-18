@@ -16,6 +16,7 @@ type node struct {
 	trust float64
 	id [10]byte
 	weight float64
+
 }
 
 type system struct {
@@ -34,9 +35,11 @@ func evaluate(_type string) float64 {
 	var start, end float64
 	switch _type {
 	case "h2h", "m2m":
-		start, end = 0.7, 0.99
-	case "h2m", "m2h":
-		start, end = 0.3, 0.4
+		start, end = 0.9, 0.99
+	case "h2m":
+		start, end = 0.1, 0.3
+	case "m2h":
+		start, end = 0.1, 0.3
 	}
 	precious := (end - start) / float64(100)
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -65,7 +68,7 @@ func rank(evaluations map[*node]float64) map[*node]int {
 	return result
 }
 
-func similar(recomds1, recomds2 map[*node]int) float64 {
+func similar(recomds1, recomds2 map[*node]int, typ1, typ2 string) float64 {
 	if len(recomds1) != len(recomds2) {
 		panic("推荐意见长度不一致")
 	}
@@ -74,7 +77,24 @@ func similar(recomds1, recomds2 map[*node]int) float64 {
 	for n, _ := range recomds1 {
 		diff = diff + math.Pow(float64(recomds1[n]-recomds2[n]), 2.0)
 	}
-	return (2.0 - 6.0 * diff / (math.Pow(float64(n), 3.0) - float64(n))) / 2.0
+	res :=  (2.0 - 6.0 * diff / (math.Pow(float64(n), 3.0) - float64(n))) / 2.0
+	fmt.Println(res, typ1, typ2)
+	return res
+}
+
+func similar2(recommands1, recommands2 map[*node]float64, typ1, typ2 string) float64 {
+	if len(recommands1) != len(recommands2) {
+		panic("推荐意见长度不一致")
+	}
+	fenzi, fenmu1, fenmu2 := 0.0, 0.0, 0.0
+	for n, e := range recommands1 {
+		fenzi += e * recommands2[n]
+		fenmu1 += e*e
+		fenmu2 += recommands2[n] * recommands2[n]
+	}
+	res :=  fenzi / (math.Pow(fenmu1, 0.5)*math.Pow(fenmu2, 0.5))
+	fmt.Println(res, typ1, typ2)
+	return res
 }
 
 // 四舍五入函数
@@ -142,7 +162,7 @@ func avg(nodes []*node) {
 
 // ---------------------------------------------------------------------------
 
-func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64) {
+func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64, on bool) {
 	sys := new(system)
 	honestNum := totalNodeNum - sishewuru(e * float64(totalNodeNum))
 	normalMaliciousNum := sishewuru(e * e1 * float64(totalNodeNum))
@@ -258,11 +278,20 @@ func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64) {
 	}
 
 	// 获取节点之间的推荐意见相似度
+	//for i := 0; i < sys.totalNodeNum; i++ {
+	//	ranki := rank(sys.nodes[i].recomds)
+	//	for j := 0; j <sys.totalNodeNum; j++ {
+	//		rankj := rank(sys.nodes[j].recomds)
+	//		sys.nodes[i].similarities[sys.nodes[j]] = similar(ranki, rankj, sys.nodes[i]._type, sys.nodes[j]._type)
+	//	}
+	//}
+
+	// 获取节点之间的推荐意见相似度
 	for i := 0; i < sys.totalNodeNum; i++ {
-		ranki := rank(sys.nodes[i].recomds)
+		ranki := sys.nodes[i].recomds
 		for j := 0; j <sys.totalNodeNum; j++ {
-			rankj := rank(sys.nodes[j].recomds)
-			sys.nodes[i].similarities[sys.nodes[j]] = similar(ranki, rankj)
+			rankj := sys.nodes[j].recomds
+			sys.nodes[i].similarities[sys.nodes[j]] = similar2(ranki, rankj, sys.nodes[i]._type, sys.nodes[j]._type)
 		}
 	}
 
@@ -274,6 +303,7 @@ func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64) {
 			}
 			sys.nodes[i].weight = sys.nodes[i].weight + s / float64(sys.totalNodeNum)
 		}
+		//fmt.Println(sys.nodes[i].weight, sys.nodes[i]._type)
 	}
 
 	// 对每个节点的推荐做归一化处理
@@ -299,7 +329,11 @@ func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64) {
 		for _, n := range sys.nodes {
 			trust := 0.0
 			for _, n2 := range sys.nodes {
-				trust = trust + n2.trust * n2.recomds[n] * n.similarities[n2]
+				if on {
+					trust = trust + n2.trust * n2.recomds[n] * n.similarities[n2] * n.weight
+				} else {
+					trust = trust + n2.trust * n2.recomds[n]
+				}
 			}
 			n.trust = trust
 		}
@@ -315,7 +349,8 @@ func setup(totalNodeNum int, e, e1, e2, e3 float64, threshold float64) {
 }
 
 func main() {
-	setup(100, 0.33, 0., 1., 0., 0.000000001)}
+	setup(100, 0.33, 0., 0., 1., 0.000000001, true)
+}
 //h := 0.0
 //hnm := 0.0
 //hcm := 0.0

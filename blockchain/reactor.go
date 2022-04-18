@@ -1,20 +1,20 @@
 package blockchain
 
 import (
+	"fmt"
 	"github.com/232425wxy/BFT/gossip"
 	"github.com/232425wxy/BFT/libs/log"
 	protoblockchain "github.com/232425wxy/BFT/proto/blockchain"
 	sm "github.com/232425wxy/BFT/state"
 	"github.com/232425wxy/BFT/store"
 	"github.com/232425wxy/BFT/types"
-	"fmt"
 	"reflect"
 	"time"
 )
 
 const (
 	// BlockchainChannel is a channel for blocks and status updates (`BlockStore` height)
-	BlockchainChannel = byte(0x40)
+	BlockchainChannel = byte(0x01)
 
 	trySyncIntervalMS = 10
 
@@ -128,7 +128,7 @@ func (bcR *BlockchainReactor) SwitchToFastSync(state sm.State) error {
 func (bcR *BlockchainReactor) OnStop() {
 	if bcR.fastSync {
 		if err := bcR.pool.Stop(); err != nil {
-			bcR.Logger.Errorw("Error stopping pool", "err", err)
+			bcR.Logger.Warnw("Error stopping pool", "err", err)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func (bcR *BlockchainReactor) AddPeer(peer *gossip.Peer) {
 		Base:   bcR.store.Base(),
 		Height: bcR.store.Height()})
 	if err != nil {
-		bcR.Logger.Errorw("could not convert msg to protobuf", "err", err)
+		bcR.Logger.Warnw("could not convert msg to protobuf", "err", err)
 		return
 	}
 
@@ -176,13 +176,13 @@ func (bcR *BlockchainReactor) respondToPeer(msg *protoblockchain.BlockRequest, s
 	if block != nil {
 		bl, err := block.ToProto()
 		if err != nil {
-			bcR.Logger.Errorw("could not convert msg to protobuf", "err", err)
+			bcR.Logger.Warnw("could not convert msg to protobuf", "err", err)
 			return false
 		}
 
 		msgBytes, err := EncodeMsg(&protoblockchain.BlockResponse{Block: bl})
 		if err != nil {
-			bcR.Logger.Errorw("could not marshal msg", "err", err)
+			bcR.Logger.Warnw("could not marshal msg", "err", err)
 			return false
 		}
 
@@ -193,7 +193,7 @@ func (bcR *BlockchainReactor) respondToPeer(msg *protoblockchain.BlockRequest, s
 
 	msgBytes, err := EncodeMsg(&protoblockchain.NoBlockResponse{Height: msg.Height})
 	if err != nil {
-		bcR.Logger.Errorw("could not convert msg to protobuf", "err", err)
+		bcR.Logger.Warnw("could not convert msg to protobuf", "err", err)
 		return false
 	}
 
@@ -204,13 +204,13 @@ func (bcR *BlockchainReactor) respondToPeer(msg *protoblockchain.BlockRequest, s
 func (bcR *BlockchainReactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 	msg, err := DecodeMsg(msgBytes)
 	if err != nil {
-		bcR.Logger.Errorw("Error decoding message", "src", src, "chId", chID, "err", err)
+		bcR.Logger.Warnw("Error decoding message", "src", src, "chId", chID, "err", err)
 		bcR.Switch.StopPeerForError(src, err)
 		return
 	}
 
 	if err = ValidateMsg(msg); err != nil {
-		bcR.Logger.Errorw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
+		bcR.Logger.Warnw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
 		bcR.Switch.StopPeerForError(src, err)
 		return
 	}
@@ -223,7 +223,7 @@ func (bcR *BlockchainReactor) Receive(chID byte, src *gossip.Peer, msgBytes []by
 	case *protoblockchain.BlockResponse:
 		bi, err := types.BlockFromProto(msg.Block)
 		if err != nil {
-			bcR.Logger.Errorw("Block content is invalid", "err", err)
+			bcR.Logger.Warnw("Block content is invalid", "err", err)
 			return
 		}
 		bcR.pool.AddBlock(src.ID(), bi, len(msgBytes))
@@ -234,7 +234,7 @@ func (bcR *BlockchainReactor) Receive(chID byte, src *gossip.Peer, msgBytes []by
 			Base:   bcR.store.Base(),
 		})
 		if err != nil {
-			bcR.Logger.Errorw("could not convert msg to protobut", "err", err)
+			bcR.Logger.Warnw("could not convert msg to protobut", "err", err)
 			return
 		}
 		src.TrySend(BlockchainChannel, msgBytes)
@@ -244,7 +244,7 @@ func (bcR *BlockchainReactor) Receive(chID byte, src *gossip.Peer, msgBytes []by
 	case *protoblockchain.NoBlockResponse:
 		bcR.Logger.Debugw("Peer does not have requested block", "peer", src, "height", msg.Height)
 	default:
-		bcR.Logger.Errorw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
+		bcR.Logger.Warnw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
 	}
 }
 
@@ -285,7 +285,7 @@ func (bcR *BlockchainReactor) poolRoutine(stateSynced bool) {
 				}
 				msgBytes, err := EncodeMsg(&protoblockchain.BlockRequest{Height: request.Height})
 				if err != nil {
-					bcR.Logger.Errorw("could not convert msg to proto", "err", err)
+					bcR.Logger.Warnw("could not convert msg to proto", "err", err)
 					continue
 				}
 
@@ -318,7 +318,7 @@ FOR_LOOP:
 			if bcR.pool.IsCaughtUp() {
 				bcR.Logger.Infow("Time to switch to consensus reactor!", "height", height)
 				if err := bcR.pool.Stop(); err != nil {
-					bcR.Logger.Errorw("Error stopping pool", "err", err)
+					bcR.Logger.Warnw("Error stopping pool", "err", err)
 				}
 				conR, ok := bcR.Switch.Reactor("CONSENSUS").(consensusReactor)
 				if ok {
@@ -358,7 +358,7 @@ FOR_LOOP:
 			err := state.Validators.VerifyReply(
 				chainID, firstID, first.Height, second.LastReply)
 			if err != nil {
-				bcR.Logger.Errorw("Error in validation", "err", err)
+				bcR.Logger.Warnw("Error in validation", "err", err)
 				peerID := bcR.pool.RedoRequest(first.Height)
 				peer := bcR.Switch.Peers().Get(peerID)
 				if peer != nil {
@@ -405,7 +405,7 @@ FOR_LOOP:
 func (bcR *BlockchainReactor) BroadcastStatusRequest() error {
 	bm, err := EncodeMsg(&protoblockchain.StatusRequest{})
 	if err != nil {
-		bcR.Logger.Errorw("could not convert msg to proto", "err", err)
+		bcR.Logger.Warnw("could not convert msg to proto", "err", err)
 		return fmt.Errorf("could not convert msg to proto: %w", err)
 	}
 

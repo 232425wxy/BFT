@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/232425wxy/BFT/libs/log"
 	httprpc "github.com/232425wxy/BFT/rpc/client/http"
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"time"
@@ -24,7 +24,7 @@ var rootCmd = cobra.Command{
 }
 
 func printErrorAndExit(reason string, err error) {
-	logger.Errorw(reason, "error", err)
+	logger.Warnw(reason, "error", err)
 	os.Exit(1)
 }
 

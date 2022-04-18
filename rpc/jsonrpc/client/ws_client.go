@@ -1,12 +1,12 @@
 package client
 
 import (
-	srrand "github.com/232425wxy/BFT/libs/rand"
-	"github.com/232425wxy/BFT/libs/service"
-	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"context"
 	"encoding/json"
 	"fmt"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	"github.com/232425wxy/BFT/libs/service"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"github.com/gorilla/websocket"
 	metrics "github.com/rcrowley/go-metrics"
 	"net"
@@ -289,7 +289,7 @@ func (c *WSClient) reconnect() error {
 
 		err := c.dial()
 		if err != nil {
-			c.Logger.Errorw("failed to redial", "err", err)
+			c.Logger.Warnw("failed to redial", "err", err)
 		} else {
 			c.Logger.Infow("reconnected")
 			if c.onReconnect != nil {
@@ -318,11 +318,11 @@ func (c *WSClient) processBacklog() error {
 	case request := <-c.backlog:
 		if c.writeWait > 0 {
 			if err := c.conn.SetWriteDeadline(time.Now().Add(c.writeWait)); err != nil {
-				c.Logger.Errorw("failed to set write deadline", "err", err)
+				c.Logger.Warnw("failed to set write deadline", "err", err)
 			}
 		}
 		if err := c.conn.WriteJSON(request); err != nil {
-			c.Logger.Errorw("failed to resend request", "err", err)
+			c.Logger.Warnw("failed to resend request", "err", err)
 			c.reconnectAfter <- err
 			// requeue request
 			c.backlog <- request
@@ -341,9 +341,9 @@ func (c *WSClient) reconnectRoutine() {
 			// wait until writeRoutine and readRoutine finish
 			c.wg.Wait()
 			if err := c.reconnect(); err != nil {
-				c.Logger.Errorw("failed to reconnect", "err", err, "original_err", originalError)
+				c.Logger.Warnw("failed to reconnect", "err", err, "original_err", originalError)
 				if err = c.Stop(); err != nil {
-					c.Logger.Errorw("failed to stop conn", "error", err)
+					c.Logger.Warnw("failed to stop conn", "error", err)
 				}
 
 				return
@@ -395,11 +395,11 @@ func (c *WSClient) writeRoutine() {
 		case request := <-c.send:
 			if c.writeWait > 0 {
 				if err := c.conn.SetWriteDeadline(time.Now().Add(c.writeWait)); err != nil {
-					c.Logger.Errorw("failed to set write deadline", "err", err)
+					c.Logger.Warnw("failed to set write deadline", "err", err)
 				}
 			}
 			if err := c.conn.WriteJSON(request); err != nil {
-				c.Logger.Errorw("failed to send request", "err", err)
+				c.Logger.Warnw("failed to send request", "err", err)
 				c.reconnectAfter <- err
 				// add request to the backlog, so we don't lose it
 				c.backlog <- request
@@ -408,11 +408,11 @@ func (c *WSClient) writeRoutine() {
 		case <-ticker.C:
 			if c.writeWait > 0 {
 				if err := c.conn.SetWriteDeadline(time.Now().Add(c.writeWait)); err != nil {
-					c.Logger.Errorw("failed to set write deadline", "err", err)
+					c.Logger.Warnw("failed to set write deadline", "err", err)
 				}
 			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				c.Logger.Errorw("failed to write ping", "err", err)
+				c.Logger.Warnw("failed to write ping", "err", err)
 				c.reconnectAfter <- err
 				return
 			}
@@ -427,7 +427,7 @@ func (c *WSClient) writeRoutine() {
 				websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
 			); err != nil {
-				c.Logger.Errorw("failed to write message", "err", err)
+				c.Logger.Warnw("failed to write message", "err", err)
 			}
 			return
 		}
@@ -461,7 +461,7 @@ func (c *WSClient) readRoutine() {
 		// reset deadline for every message type (control or data)
 		if c.readWait > 0 {
 			if err := c.conn.SetReadDeadline(time.Now().Add(c.readWait)); err != nil {
-				c.Logger.Errorw("failed to set read deadline", "err", err)
+				c.Logger.Warnw("failed to set read deadline", "err", err)
 			}
 		}
 		_, data, err := c.conn.ReadMessage()
@@ -470,7 +470,7 @@ func (c *WSClient) readRoutine() {
 				return
 			}
 
-			c.Logger.Errorw("failed to read response", "err", err)
+			c.Logger.Warnw("failed to read response", "err", err)
 			close(c.readRoutineQuit)
 			c.reconnectAfter <- err
 			return
@@ -479,12 +479,12 @@ func (c *WSClient) readRoutine() {
 		var response types.RPCResponse
 		err = json.Unmarshal(data, &response)
 		if err != nil {
-			c.Logger.Errorw("failed to parse response", "err", err, "data", string(data))
+			c.Logger.Warnw("failed to parse response", "err", err, "data", string(data))
 			continue
 		}
 
 		if err = validateResponseID(response.ID); err != nil {
-			c.Logger.Errorw("error in response ID", "id", response.ID, "err", err)
+			c.Logger.Warnw("error in response ID", "id", response.ID, "err", err)
 			continue
 		}
 

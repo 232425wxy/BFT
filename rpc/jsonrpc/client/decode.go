@@ -1,11 +1,11 @@
 package client
 
 import (
-	srjson "github.com/232425wxy/BFT/libs/json"
-	types "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"encoding/json"
 	"errors"
 	"fmt"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	types "github.com/232425wxy/BFT/rpc/jsonrpc/types"
 )
 
 func unmarshalResponseBytes(
@@ -20,7 +20,6 @@ func unmarshalResponseBytes(
 		return nil, fmt.Errorf("error unmarshalling: %w", err)
 	}
 	if response.Error != nil {
-		fmt.Println("sign b", response)
 		return nil, response.Error
 	}
 	if err := validateAndVerifyID(response, expectedID); err != nil {

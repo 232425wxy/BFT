@@ -1,11 +1,11 @@
 package pubsub
 
 import (
-	"github.com/232425wxy/BFT/libs/log"
-	"github.com/232425wxy/BFT/libs/service"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/libs/service"
 	"sync"
 )
 
@@ -277,7 +277,7 @@ loop:
 			state.add(cmd.clientID, cmd.query, cmd.subscription)
 		case pub:
 			if err := state.send(cmd.msg, cmd.events); err != nil {
-				s.Logger.Errorw("Error querying for events", "err", err)
+				s.Logger.Warnw("Error querying for events", "err", err)
 			}
 		}
 	}

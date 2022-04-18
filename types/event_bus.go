@@ -1,12 +1,12 @@
 package types
 
 import (
+	"context"
+	"fmt"
 	"github.com/232425wxy/BFT/libs/log"
 	srpubsub "github.com/232425wxy/BFT/libs/pubsub"
 	"github.com/232425wxy/BFT/libs/service"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
-	"context"
-	"fmt"
 )
 
 const defaultCapacity = 0
@@ -60,7 +60,7 @@ func (b *EventBus) OnStart() error {
 
 func (b *EventBus) OnStop() {
 	if err := b.pubsub.Stop(); err != nil {
-		b.pubsub.Logger.Errorw("error trying to stop eventBus", "error", err)
+		b.pubsub.Logger.Warnw("error trying to stop eventBus", "error", err)
 	}
 }
 
@@ -182,9 +182,6 @@ func (b *EventBus) PublishEventValidBlock(data EventDataRoundState) error {
 	return b.Publish(EventValidBlock, data)
 }
 
-// PublishEventTx publishes tx event with events from Result. Note it will add
-// predefined keys (EventTypeKey, TxHashKey). Existing events with the same keys
-// will be overwritten.
 func (b *EventBus) PublishEventTx(data EventDataTx) error {
 	// no explicit deadline for publishing events
 	ctx := context.Background()
@@ -203,7 +200,7 @@ func (b *EventBus) PublishEventNewRoundStep(data EventDataRoundState) error {
 	return b.Publish(EventNewRoundStep, data)
 }
 
-func (b *EventBus) PublishEventTimeoutPropose(data EventDataRoundState) error {
+func (b *EventBus) PublishEventTimeoutPrePrepare(data EventDataRoundState) error {
 	return b.Publish(EventTimeoutPropose, data)
 }
 

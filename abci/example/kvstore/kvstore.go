@@ -1,20 +1,19 @@
 package kvstore
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"github.com/232425wxy/BFT/abci/example/code"
 	"github.com/232425wxy/BFT/abci/types"
 	"github.com/232425wxy/BFT/crypto/srhash"
 	hex_bytes "github.com/232425wxy/BFT/libs/bytes"
 	"github.com/232425wxy/BFT/libs/cmap"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
-	"bytes"
-	"encoding/binary"
-	"encoding/json"
-	"fmt"
 )
 
 var (
-	kvPairPrefixKey = []byte("kvPairKey:")
 	ValUpdateChan = make(chan []protoabci.ValidatorUpdate)
 )
 
@@ -67,9 +66,18 @@ func (app *Application) Info(req protoabci.RequestInfo) (resInfo protoabci.Respo
 }
 
 func (app *Application) EndBlock(req protoabci.RequestEndBlock) protoabci.ResponseEndBlock {
-	valUpdates := app.ValUpdates
-	app.ValUpdates = nil
-	return protoabci.ResponseEndBlock{ValidatorUpdates: valUpdates}
+	if app.ValUpdates != nil {
+		if app.ValUpdates[0].Height == req.Height {
+			cv := copyValidatorUpdates(app.ValUpdates)
+			app.ValUpdates = nil
+			//for _, v := range cv {
+			//	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>------------------------", v.Type, v.Power)
+			//}
+			return protoabci.ResponseEndBlock{ValidatorUpdates: cv}
+		}
+		app.ValUpdates = nil
+	}
+	return protoabci.ResponseEndBlock{ValidatorUpdates: nil}
 }
 
 // DeliverTx 重写了 BaseApplication 的 DeliverTx 方法，
@@ -91,7 +99,6 @@ func (app *Application) DeliverTx(req protoabci.RequestDeliverTx) protoabci.Resp
 	}
 	app.state.db.Set(hashTx(req.Tx), bz)
 	app.state.Size++
-	fmt.Println(hashTx(req.Tx))
 	events := []protoabci.Event{
 		{
 			Type: "KVStore",
@@ -148,4 +155,20 @@ func (app *Application) updateValUpdateRoutine() {
 			app.ValUpdates = valUpdate
 		}
 	}
+}
+
+func copyValidatorUpdates(vus []protoabci.ValidatorUpdate) []protoabci.ValidatorUpdate {
+	if len(vus) == 0 {
+		return nil
+	}
+	us := make([]protoabci.ValidatorUpdate, len(vus))
+	for i := 0; i <len(us); i++ {
+		us[i] = protoabci.ValidatorUpdate{
+			PubKey: vus[i].PubKey,
+			Power:   vus[i].Power,
+			Type:    vus[i].Type,
+			Height:  vus[i].Height,
+		}
+	}
+	return us
 }

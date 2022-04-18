@@ -1,0 +1,15 @@
+syntax = "proto3";
+package crtrust;
+
+message Notice {
+  string Src = 2;
+  int64  Height = 3;
+}
+
+message LocalEvaluation {
+  map<string, double> PeerEval = 1;
+  string Src = 2;
+  int64 Height = 3;
+}
+
+// command: protoc --gogofaster_out=. -I=. crtrust.proto

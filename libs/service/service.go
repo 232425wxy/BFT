@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/232425wxy/BFT/libs/log"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/libs/log"
 	"sync/atomic"
 )
 
@@ -91,7 +91,7 @@ func (bs *BaseService) SetLogger(l log.CRLogger) {
 func (bs *BaseService) Start() error {
 	if atomic.CompareAndSwapUint32(&bs.started, 0, 1) { // 不能开启一个已经运行的服务
 		if atomic.LoadUint32(&bs.stopped) == 1 { // 不能开启一个已经被关闭的服务
-			bs.Logger.Errorw(fmt.Sprintf("Not starting %v service -- already stopped", bs.name),
+			bs.Logger.Warnw(fmt.Sprintf("Not starting %v service -- already stopped", bs.name),
 				"impl", bs.impl)
 			// 回滚
 			atomic.StoreUint32(&bs.started, 0)
@@ -118,7 +118,7 @@ func (bs *BaseService) OnStart() error { return nil }
 func (bs *BaseService) Stop() error {
 	if atomic.CompareAndSwapUint32(&bs.stopped, 0, 1) { // 不能关闭一个已经被关闭的服务
 		if atomic.LoadUint32(&bs.started) == 0 { // 不能关闭一个还未运行的服务
-			bs.Logger.Errorw(fmt.Sprintf("Not stopping %v service -- has not been started yet", bs.name),
+			bs.Logger.Warnw(fmt.Sprintf("Not stopping %v service -- has not been started yet", bs.name),
 				"impl", bs.impl)
 			// 回滚
 			atomic.StoreUint32(&bs.stopped, 0)

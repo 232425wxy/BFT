@@ -363,7 +363,7 @@ func DefaultMempoolConfig() *MempoolConfig {
 		Broadcast: true,
 		WalPath:   "",
 		// 每个签名验证需要0.5 ms，直到我们实现 ABCI Recheck
-		Size:        500000000,
+		Size:        5000,
 		MaxTxsBytes: 1024 * 1024 * 1024 * 10, // 1GB
 		CacheSize:   100000000,
 		MaxTxBytes:  1024 * 1024, // 1MB
@@ -407,23 +407,23 @@ type ConsensusConfig struct {
 	walFile string // overrides WalPath if set
 
 	// 在给 nil 预投票之前，我们等待下一个 proposal 区块的超时时间
-	TimeoutPropose time.Duration `mapstructure:"timeout_propose"`
+	TimeoutPrePrepare time.Duration `mapstructure:"timeout_propose"`
 	// 每轮给 timeout_proposal 增加的时间
-	TimeoutProposeDelta time.Duration `mapstructure:"timeout_propose_delta"`
+	TimeoutPrePrepareDelta time.Duration `mapstructure:"timeout_propose_delta"`
 	// 我们收到+2/3的预投票后要等多久?不是一个单一块或nil)
-	TimeoutPrevote time.Duration `mapstructure:"timeout_prevote"`
+	TimeoutPrepare time.Duration `mapstructure:"timeout_prevote"`
 	// 每轮的timeout_prevote增加多少
-	TimeoutPrevoteDelta time.Duration `mapstructure:"timeout_prevote_delta"`
+	TimeoutPrepareDelta time.Duration `mapstructure:"timeout_prevote_delta"`
 	// 在收到+2/3的“任何东西”的预提交后，我们需要等待多长时间?不是一个单一块或nil)
-	TimeoutPrecommit time.Duration `mapstructure:"timeout_precommit"`
+	TimeoutCommit time.Duration `mapstructure:"timeout_precommit"`
 	// 每轮增加多少timeout_precommit
-	TimeoutPrecommitDelta time.Duration `mapstructure:"timeout_precommit_delta"`
+	TimeoutCommitDelta time.Duration `mapstructure:"timeout_precommit_delta"`
 	// 提交一个block后，在开始新的高度之前等待的时间(这让我们有机会接收更多的预提交，即使我们已经有+2/3)。
 	// 注意:当修改时，请确保更新 time_iota_ms 生成参数
-	TimeoutCommit time.Duration `mapstructure:"timeout_commit"`
+	TimeoutReply time.Duration `mapstructure:"timeout_commit"`
 
 	// 一旦我们有了所有的预提交，就尽快取得进展(就像TimeoutCommit = 0)
-	SkipTimeoutCommit bool `mapstructure:"skip_timeout_commit"`
+	SkipTimeoutReply bool `mapstructure:"skip_timeout_commit"`
 
 	// EmptyBlocks模式和生成两个空块之间的时间间隔
 	CreateEmptyBlocks         bool          `mapstructure:"create_empty_blocks"`
@@ -434,39 +434,30 @@ type ConsensusConfig struct {
 	PeerQueryMaj23SleepDuration time.Duration `mapstructure:"peer_query_maj23_sleep_duration"`
 
 	// 节点是否是拜占庭节点
-	IsByzantine bool `mapstructure:"is_byzantine"`
+	TestIsByzantine bool `mapstructure:"test_is_byzantine"`
 
-	// 投票签名错误的概率
-	ProbWrongSign float64 `mapstructure:"prob_wrong_sign"`
+	TestByzantineRatio float64 `mapstructure:"test_byzantine_ratio"`
 
-	// 拜占庭节点所占比例
-	TestByzantineRatio float64 `mapstructure:"byzantine_ratio"`
-
-	Evaluation bool `mapstructure:"evaluation"`
-
-	ToleranceDelay float64 `mapstructure:"tolerance_delay"`
+	TestWhistleblower bool `mapstructure:"test_whistleblower"`
 }
 
 // DefaultConsensusConfig 返回共识服务的默认配置
 func DefaultConsensusConfig() *ConsensusConfig {
 	return &ConsensusConfig{
 		WalPath:                     filepath.Join(defaultDataDir, "cs.wal", "wal"),
-		TimeoutPropose:              3000 * time.Millisecond,
-		TimeoutProposeDelta:         500 * time.Millisecond,
-		TimeoutPrevote:              1000 * time.Millisecond,
-		TimeoutPrevoteDelta:         500 * time.Millisecond,
-		TimeoutPrecommit:            1000 * time.Millisecond,
-		TimeoutPrecommitDelta:       500 * time.Millisecond,
+		TimeoutPrePrepare:           2500 * time.Millisecond,
+		TimeoutPrePrepareDelta:      500 * time.Millisecond,
+		TimeoutPrepare:              1000 * time.Millisecond,
+		TimeoutPrepareDelta:         500 * time.Millisecond,
 		TimeoutCommit:               1000 * time.Millisecond,
-		SkipTimeoutCommit:           false,
+		TimeoutCommitDelta:          500 * time.Millisecond,
+		TimeoutReply:                1000 * time.Millisecond,
+		SkipTimeoutReply:            false,
 		CreateEmptyBlocks:           false,
 		CreateEmptyBlocksInterval:   0 * time.Second,
 		PeerGossipSleepDuration:     100 * time.Millisecond,
 		PeerQueryMaj23SleepDuration: 2000 * time.Millisecond,
-		ProbWrongSign:               0.5,
-		TestByzantineRatio:          0.33,
-		Evaluation:                  false,
-		ToleranceDelay:               2.5,
+		TestByzantineRatio:          0.3,
 	}
 }
 
@@ -476,30 +467,30 @@ func (cfg *ConsensusConfig) WaitForTxs() bool {
 	return !cfg.CreateEmptyBlocks || cfg.CreateEmptyBlocksInterval > 0
 }
 
-// Propose 返回等待 proposal 的超时时间
-func (cfg *ConsensusConfig) Propose(round int32) time.Duration {
+// PrePrepareWait 返回等待 proposal 的超时时间
+func (cfg *ConsensusConfig) PrePrepareWait(round int32) time.Duration {
 	return time.Duration(
-		cfg.TimeoutPropose.Nanoseconds()+cfg.TimeoutProposeDelta.Nanoseconds()*int64(round),
+		cfg.TimeoutPrePrepare.Nanoseconds()+cfg.TimeoutPrePrepareDelta.Nanoseconds()*int64(round),
 	) * time.Nanosecond
 }
 
-// Prevote 返回在收到任何 +2/3 prevote 后等待其余节点投票的时间：(1+0.5*round)s
-func (cfg *ConsensusConfig) Prevote(round int32) time.Duration {
+// PrepareWait 返回在收到任何 +2/3 prevote 后等待其余节点投票的时间：(1+0.5*round)s
+func (cfg *ConsensusConfig) PrepareWait(round int32) time.Duration {
 	return time.Duration(
-		cfg.TimeoutPrevote.Nanoseconds()+cfg.TimeoutPrevoteDelta.Nanoseconds()*int64(round),
+		cfg.TimeoutPrepare.Nanoseconds()+cfg.TimeoutPrepareDelta.Nanoseconds()*int64(round),
 	) * time.Nanosecond
 }
 
-// Precommit 返回在收到任何 +2/3 precommit 后等待其余节点投票的时间：(1+0.5*round)s
-func (cfg *ConsensusConfig) Precommit(round int32) time.Duration {
+// CommitWait 返回在收到任何 +2/3 precommit 后等待其余节点投票的时间：(1+0.5*round)s
+func (cfg *ConsensusConfig) CommitWait(round int32) time.Duration {
 	return time.Duration(
-		cfg.TimeoutPrecommit.Nanoseconds()+cfg.TimeoutPrecommitDelta.Nanoseconds()*int64(round),
+		cfg.TimeoutCommit.Nanoseconds()+cfg.TimeoutCommitDelta.Nanoseconds()*int64(round),
 	) * time.Nanosecond
 }
 
 // Commit 在收到+2/3的预提交后，返回等待其余节点投票的时间
 func (cfg *ConsensusConfig) Commit(t time.Time) time.Time {
-	return t.Add(cfg.TimeoutCommit)
+	return t.Add(cfg.TimeoutReply)
 }
 
 // WalFile 返回预写日志的绝对路径
@@ -517,25 +508,25 @@ func (cfg *ConsensusConfig) SetWalFile(walFile string) {
 
 // ValidateBasic 执行基本验证(检查参数边界等)，如果任何检查失败，返回一个错误。
 func (cfg *ConsensusConfig) ValidateBasic() error {
-	if cfg.TimeoutPropose < 0 {
+	if cfg.TimeoutPrePrepare < 0 {
 		return errors.New("timeout_propose can't be negative")
 	}
-	if cfg.TimeoutProposeDelta < 0 {
+	if cfg.TimeoutPrePrepareDelta < 0 {
 		return errors.New("timeout_propose_delta can't be negative")
 	}
-	if cfg.TimeoutPrevote < 0 {
+	if cfg.TimeoutPrepare < 0 {
 		return errors.New("timeout_prevote can't be negative")
 	}
-	if cfg.TimeoutPrevoteDelta < 0 {
+	if cfg.TimeoutPrepareDelta < 0 {
 		return errors.New("timeout_prevote_delta can't be negative")
 	}
-	if cfg.TimeoutPrecommit < 0 {
+	if cfg.TimeoutCommit < 0 {
 		return errors.New("timeout_precommit can't be negative")
 	}
-	if cfg.TimeoutPrecommitDelta < 0 {
+	if cfg.TimeoutCommitDelta < 0 {
 		return errors.New("timeout_precommit_delta can't be negative")
 	}
-	if cfg.TimeoutCommit < 0 {
+	if cfg.TimeoutReply < 0 {
 		return errors.New("timeout_commit can't be negative")
 	}
 	if cfg.CreateEmptyBlocksInterval < 0 {

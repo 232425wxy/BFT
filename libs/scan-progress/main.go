@@ -23,7 +23,7 @@ func WalkDir(dir, suffix string) (files []string, err error) {
 
 		if strings.HasSuffix(strings.ToLower(fi.Name()), suffix) &&
 			!strings.HasSuffix(strings.ToLower(fi.Name()), ".txt") &&
-			!strings.HasSuffix(strings.ToLower(fi.Name()), ".go"){
+			!strings.HasSuffix(strings.ToLower(fi.Name()), ".pb.go"){
 			//文件后缀匹配
 			files = append(files, fname)
 		}
@@ -52,7 +52,7 @@ func ScanLine(files []string) int {
 			if str != "\n" {
 				lines++
 			}
-			if strings.Contains(str, "聊天室") {
+			if strings.Contains(str, "Errorw(") {
 				fmt.Println(f, str)
 			}
 		}
@@ -69,7 +69,7 @@ func main() {
 	//lineA := ScanLine(files)
 	lineA := 1
 
-	files, err := WalkDir("/root/Experiment/codes/go/src/chat-room/", "")
+	files, err := WalkDir("/root/Experiment/codes/go/src/BFT/", "")
 	if err != nil {
 		log.Fatalln(err)
 	}

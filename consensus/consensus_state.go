@@ -1,7 +1,11 @@
 package consensus
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/crtrust"
 	"github.com/232425wxy/BFT/crypto"
 	"github.com/232425wxy/BFT/gossip"
 	srevents "github.com/232425wxy/BFT/libs/events"
@@ -15,9 +19,6 @@ import (
 	types2 "github.com/232425wxy/BFT/proto/types"
 	sm "github.com/232425wxy/BFT/state"
 	"github.com/232425wxy/BFT/types"
-	"bytes"
-	"errors"
-	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"io/ioutil"
 	"os"
@@ -114,9 +115,9 @@ type State struct {
 	// 在共识状态和反应器之间同步 pubsub，state 只会触发 EventNewRoundStep 和 EventVote
 	evsw srevents.EventSwitch
 
-	t *time.Timer
+	crTrustReactor *crtrust.Reactor
 
-	waitNextEvaluation int
+	testTimes int
 }
 
 // StateOption sets an optional parameter on the State.
@@ -129,6 +130,7 @@ func NewState(
 	blockExec *sm.BlockExecutor,
 	blockStore sm.BlockStore,
 	txNotifier txNotifier,
+	crTrustReactor *crtrust.Reactor,
 	options ...StateOption,
 ) *State {
 	// cs : consensus state
@@ -145,8 +147,8 @@ func NewState(
 		doWALCatchup:     true,     // 能迎头赶上
 		wal:              nilWAL{}, // 一个空的什么也实现不了的 wal
 		evsw:             srevents.NewEventSwitch(),
-		t:                time.NewTimer(100 * time.Millisecond),
-		waitNextEvaluation: 10,
+		crTrustReactor: crTrustReactor,
+		testTimes:        1,
 	}
 
 	// We have no votes, so reconstruct LastCommits from SeenCommit.
@@ -201,7 +203,7 @@ func (cs *State) SetPrivValidator(priv types.PrivValidator) {
 	cs.privValidator = priv
 
 	if err := cs.updatePrivValidatorPubKey(); err != nil {
-		cs.Logger.Errorw("Failed to get private validator pubkey", "err", err)
+		cs.Logger.Warnw("Failed to get private validator pubkey", "err", err)
 	}
 }
 
@@ -236,14 +238,14 @@ func (cs *State) OnStart() error {
 				break LOOP
 
 			case !IsDataCorruptionError(err):
-				cs.Logger.Errorw("Error on catchup replay; proceeding to start state anyway", "err", err)
+				cs.Logger.Warnw("Error on catchup replay; proceeding to start state anyway", "err", err)
 				break LOOP
 
 			case repairAttempted:
 				return err
 			}
 
-			cs.Logger.Errorw("The WAL file is corrupted; attempting repair", "err", err)
+			cs.Logger.Warnw("The WAL file is corrupted; attempting repair", "err", err)
 
 			if err := cs.wal.Stop(); err != nil {
 				return err
@@ -260,7 +262,7 @@ func (cs *State) OnStart() error {
 
 			// 3) try to repair (WAL file will be overwritten!)
 			if err := repairWalFile(corruptedFile, cs.config.WalFile()); err != nil {
-				cs.Logger.Errorw("The WAL repair failed", "err", err)
+				cs.Logger.Warnw("The WAL repair failed", "err", err)
 				return err
 			}
 
@@ -296,7 +298,7 @@ func (cs *State) OnStart() error {
 func (cs *State) loadWalFile() error {
 	wal, err := cs.OpenWAL(cs.config.WalFile())
 	if err != nil {
-		cs.Logger.Errorw("Failed to load state WAL", "err", err)
+		cs.Logger.Warnw("Failed to load state WAL", "err", err)
 		return err
 	}
 
@@ -307,11 +309,11 @@ func (cs *State) loadWalFile() error {
 // OnStop implements service.Service.
 func (cs *State) OnStop() {
 	if err := cs.evsw.Stop(); err != nil {
-		cs.Logger.Errorw("Failed trying to stop eventSwitch", "error", err)
+		cs.Logger.Warnw("Failed trying to stop eventSwitch", "error", err)
 	}
 
 	if err := cs.timeoutTicker.Stop(); err != nil {
-		cs.Logger.Errorw("Failed trying to stop timeoutTicket", "error", err)
+		cs.Logger.Warnw("Failed trying to stop timeoutTicket", "error", err)
 	}
 }
 
@@ -324,14 +326,14 @@ func (cs *State) Wait() {
 func (cs *State) OpenWAL(walFile string) (WAL, error) {
 	wal, err := NewWAL(walFile)
 	if err != nil {
-		cs.Logger.Errorw("Failed to open WAL", "file", walFile, "err", err)
+		cs.Logger.Warnw("Failed to open WAL", "file", walFile, "err", err)
 		return nil, err
 	}
 
 	wal.SetLogger(cs.Logger.With("WAL", walFile))
 
 	if err := wal.Start(); err != nil {
-		cs.Logger.Errorw("Failed to start WAL", "err", err)
+		cs.Logger.Warnw("Failed to start WAL", "err", err)
 		return nil, err
 	}
 
@@ -351,7 +353,7 @@ func (cs *State) updateHeight(height int64) {
 // 更新共识状态的 round 和 step：
 //	State.Round = round
 //	State.Step = step
-// 仅在 updateToState、enterNewRound、enterPrePrepare、enterPrepare、enterPrepareWait、enterPrecommit、enterReply 7个方法中被调用
+// 仅在 updateToState、enterNewRound、enterPrePrepare、enterPrepare、enterPrepareWait、enterCommit、enterReply 7个方法中被调用
 func (cs *State) updateRoundStep(round int32, step RoundStepType) {
 	cs.Round = round
 	cs.Step = step
@@ -368,7 +370,7 @@ func (cs *State) scheduleRound0() {
 }
 
 // scheduleTimeout 被以下6个方法调用：
-//	scheduleRound0、handleTxsAvailable、enterNewRound、enterPrePrepare、enterPrepareWait、enterPrecommitWait
+//	scheduleRound0、handleTxsAvailable、enterNewRound、enterPrePrepare、enterPrepareWait、enterCommitWait
 func (cs *State) scheduleTimeout(duration time.Duration, height int64, round int32, step RoundStepType) {
 	cs.timeoutTicker.ScheduleTimeout(timeoutInfo{duration, height, round, step})
 }
@@ -489,17 +491,17 @@ func (cs *State) updateToState(state sm.State) {
 // newStep 将 RoundState 代表的 height、round 和 step 写入到预写日志里，
 // 如果 State.eventBus 不为 nil，则发布 EventNewRoundStep 事件
 // newStep 可被以下7个函数调用：
-//	updateToState、enterPrePrepare、enterPrepare、enterPrepareWait、enterPrecommit、enterPrecommitWait、enterReply
+//	updateToState、enterPrePrepare、enterPrepare、enterPrepareWait、enterCommit、enterCommitWait、enterReply
 func (cs *State) newStep() {
 	// 将 types.EventDataRoundState 写入到预写日志里
 	rs := cs.RoundStateEvent()
 	if err := cs.wal.Write(rs); err != nil {
-		cs.Logger.Errorw("Failed writing to WAL", "err", err)
+		cs.Logger.Warnw("Failed writing to WAL", "err", err)
 	}
 
 	if cs.eventBus != nil {
 		if err := cs.eventBus.PublishEventNewRoundStep(rs); err != nil {
-			cs.Logger.Errorw("Failed publishing new round step", "err", err)
+			cs.Logger.Warnw("Failed publishing new round step", "err", err)
 		}
 
 		cs.evsw.FireEvent(types.EventNewRoundStep, &cs.RoundState)
@@ -518,7 +520,7 @@ func (cs *State) receiveRoutine() {
 	// onExit 就是退出共识状态机的意思
 	onExit := func(cs *State) {
 		if err := cs.wal.Stop(); err != nil {
-			cs.Logger.Errorw("Failed trying to stop WAL", "error", err)
+			cs.Logger.Warnw("Failed trying to stop WAL", "error", err)
 		}
 
 		cs.wal.Wait()
@@ -527,7 +529,7 @@ func (cs *State) receiveRoutine() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			cs.Logger.Errorw("CONSENSUS FAILURE!!!!!!!", "err", r, "stack", string(debug.Stack()))
+			cs.Logger.Warnw("CONSENSUS FAILURE!!!!!!!", "err", r, "stack", string(debug.Stack()))
 			panic(string(debug.Stack()))
 		}
 	}()
@@ -541,7 +543,7 @@ func (cs *State) receiveRoutine() {
 
 		case mi = <-cs.peerMsgQueue:
 			if err := cs.wal.Write(mi); err != nil {
-				cs.Logger.Errorw("Failed writing to WAL", "err", err)
+				cs.Logger.Warnw("Failed writing to WAL", "err", err)
 			}
 			cs.handleMsg(mi)
 
@@ -557,7 +559,7 @@ func (cs *State) receiveRoutine() {
 
 		case ti := <-cs.timeoutTicker.Chan():
 			if err := cs.wal.Write(ti); err != nil {
-				cs.Logger.Errorw("Failed writing to WAL", "err", err)
+				cs.Logger.Warnw("Failed writing to WAL", "err", err)
 			}
 			cs.handleTimeout(ti, cs.RoundState)
 
@@ -584,16 +586,16 @@ func (cs *State) handleMsg(mi msgInfo) {
 
 	switch msg := msg.(type) {
 	case *PrePrepareMessage:
-		err = cs.setProposal(msg.PrePrepare)
+		err = cs.setPrePrepare(msg.PrePrepare)
 
 	case *BlockPartMessage:
-		added, err = cs.addProposalBlockPart(msg, peerID)
+		added, err = cs.addPrePrepareBlockPart(msg, peerID)
 		if added {
 			cs.statsMsgQueue <- mi
 		}
 
 		if err != nil && msg.Round != cs.Round {
-			cs.Logger.Errorw("Received block part from wrong round", "height", cs.Height, "cs_round", cs.Round, "block_round", msg.Round)
+			cs.Logger.Warnw("Received block part from wrong round", "height", cs.Height, "cs_round", cs.Round, "block_round", msg.Round)
 			err = nil
 		}
 
@@ -605,7 +607,7 @@ func (cs *State) handleMsg(mi msgInfo) {
 		}
 
 	default:
-		cs.Logger.Errorw("Unknown msg type", "type", fmt.Sprintf("%T", msg))
+		cs.Logger.Warnw("Unknown msg type", "type", fmt.Sprintf("%T", msg))
 		return
 	}
 }
@@ -630,24 +632,29 @@ func (cs *State) handleTimeout(ti timeoutInfo, rs RoundState) {
 		cs.enterPrePrepare(ti.Height, 0) // 进入propose阶段
 
 	case RoundStepPrePrepare:
-		if err := cs.eventBus.PublishEventTimeoutPropose(cs.RoundStateEvent()); err != nil {
-			cs.Logger.Errorw("Failed publishing timeout pre_prepare", "err", err)
+		if err := cs.eventBus.PublishEventTimeoutPrePrepare(cs.RoundStateEvent()); err != nil {
+			cs.Logger.Warnw("Failed publishing timeout pre_prepare", "err", err)
 		}
+		cs.crTrustReactor.UpdateBads(cs.Validators.GetPrimary(cs.state.LastBlockID, 0).Address)
+		if cs.testTimes % 5 == 0 && cs.config.TestWhistleblower {
+			cs.evsw.FireEvent(types.EventTrust, cs.Height)  // 主节点超时，发起信任评估
+		}
+		cs.testTimes = (cs.testTimes + 1) % 1000000
 		cs.enterPrepare(ti.Height, ti.Round)
 
 	case RoundStepPrepareWait:
 		if err := cs.eventBus.PublishEventTimeoutWait(cs.RoundStateEvent()); err != nil {
-			cs.Logger.Errorw("Failed publishing prepare wait", "err", err)
+			cs.Logger.Warnw("Failed publishing prepare wait", "err", err)
 		}
 
-		cs.enterPrecommit(ti.Height, ti.Round)
+		cs.enterCommit(ti.Height, ti.Round)
 
 	case RoundStepCommitWait:
 		if err := cs.eventBus.PublishEventTimeoutWait(cs.RoundStateEvent()); err != nil {
-			cs.Logger.Errorw("Failed publishing commit wait", "err", err)
+			cs.Logger.Warnw("Failed publishing commit wait", "err", err)
 		}
 
-		cs.enterPrecommit(ti.Height, ti.Round)
+		cs.enterCommit(ti.Height, ti.Round)
 		cs.enterNewRound(ti.Height, ti.Round+1)
 
 	default:
@@ -701,9 +708,7 @@ func (cs *State) enterNewRound(height int64, round int32) {
 
 	cs.updateRoundStep(round, RoundStepNewRound)
 	cs.Validators = validators
-	if round == 0 {
-
-	} else {
+	if round != 0 {
 		// 第一轮共识失败了，重置proposal
 		cs.PrePrepare = nil
 		cs.PrePrepareBlock = nil
@@ -714,7 +719,7 @@ func (cs *State) enterNewRound(height int64, round int32) {
 	cs.TriggeredTimeoutCommit = false
 
 	if err := cs.eventBus.PublishEventNewRound(cs.NewRoundEvent(cs.state.LastBlockID, cs.Round)); err != nil {
-		cs.Logger.Errorw("Failed publishing new round", "err", err)
+		cs.Logger.Warnw("Failed publishing new round", "err", err)
 	}
 
 	waitForTxs := cs.config.WaitForTxs() && round == 0 && !cs.needProofBlock(height)
@@ -744,7 +749,7 @@ func (cs *State) needProofBlock(height int64) bool {
 	return !bytes.Equal(cs.state.AppHash, lastBlockMeta.Header.AppHash)  // 一般情况下，这里都是返回false
 }
 
-// enterPrePrepare 确认自己是不是 proposer，是的话则负责提出新的 proposal，proposal 的来源有两种：
+// enterPrePrepare 确认自己是不是 primary，是的话则负责提出新的 proposal，proposal 的来源有两种：
 //	1. POL 锁定的区块
 //	2. 从内存池里获取新的合法交易数据，组成一个新区块
 func (cs *State) enterPrePrepare(height int64, round int32) {
@@ -760,13 +765,13 @@ func (cs *State) enterPrePrepare(height int64, round int32) {
 		cs.updateRoundStep(round, RoundStepPrePrepare)
 		cs.newStep()
 		if cs.isPrePrepareComplete() {
-			// 如果我们已经收到了完整的proposal，则进入prevote阶段
+			// 如果我们已经收到了完整的proposal，则进入prepare阶段
 			cs.enterPrepare(height, cs.Round)
 		}
 	}()
 
-	// 如果round等于0，默认最多等待3秒中进入prevote阶段，如果round等于1，默认最多等待3.5秒进入prevote阶段
-	cs.scheduleTimeout(cs.config.Propose(round), height, round, RoundStepPrePrepare)
+	// 如果round等于0，默认最多等待3秒中进入prepare阶段，如果round等于1，默认最多等待3.5秒进入prepare阶段
+	cs.scheduleTimeout(cs.config.PrePrepareWait(round), height, round, RoundStepPrePrepare)
 
 	if cs.privValidator == nil {
 		return
@@ -801,6 +806,9 @@ func (cs *State) isPrimary(address []byte) bool {
 
 // decidePrePrepare 如果之前 round 中有 POL，那么就以 POL 为 proposal，否则就创建新的 proposal
 func (cs *State) decidePrePrepare(height int64, round int32) {
+	if cs.config.TestIsByzantine {  // 如果拜占庭节点成为了主节点，则它可能会选择宕机
+		return
+	}
 	var block *types.Block
 	var blockParts *types.PartSet
 
@@ -814,7 +822,7 @@ func (cs *State) decidePrePrepare(height int64, round int32) {
 	}
 
 	if err := cs.wal.FlushAndSync(); err != nil {
-		cs.Logger.Errorw("Failed flushing WAL to disk")
+		cs.Logger.Warnw("Failed flushing WAL to disk")
 	}
 
 	// 创建 prePrepare，prePrepare 是由 block 构成的
@@ -834,12 +842,12 @@ func (cs *State) decidePrePrepare(height int64, round int32) {
 
 		cs.Logger.Infow("Signed pre_prepare", "height", height, "round", round, "pre_prepare", prePrepare)
 	} else if !cs.replayMode {
-		cs.Logger.Errorw("Failed signing pre_prepare", "height", height, "round", round, "err", err)
+		cs.Logger.Warnw("Failed signing pre_prepare", "height", height, "round", round, "err", err)
 	}
 }
 
 // 如果我们收到了完整的提案则返回true，或者提案中显示POLRound大于0，则表示该提案是过去发起过的，
-// 并且已经获得了大多数prevote的支持，则我们返回true
+// 并且已经获得了大多数prepare的支持，则我们返回true
 func (cs *State) isPrePrepareComplete() bool {
 	if cs.PrePrepare == nil || cs.PrePrepareBlock == nil {
 		return false
@@ -848,8 +856,8 @@ func (cs *State) isPrePrepareComplete() bool {
 		return true
 	}
 	// 如果cs.PrePrepare.POLRound大于0，表示该proposal是之前cs.PrePrepare.POLRound轮次中被提出过的，
-	// 并且已经获得了大多数prevote的支持，那么这些都是proposer告诉我们的，为了验证proposer说法是否正
-	// 确，我们还得验证在cs.PrePrepare.POLRound轮次中我们是否收到了足够多的支持proposal的prevote
+	// 并且已经获得了大多数prepare的支持，那么这些都是proposer告诉我们的，为了验证proposer说法是否正
+	// 确，我们还得验证在cs.PrePrepare.POLRound轮次中我们是否收到了足够多的支持proposal的prepare
 	return cs.Votes.Prepares(cs.PrePrepare.POLRound).HasTwoThirdsMajority()
 }
 
@@ -866,7 +874,7 @@ func (cs *State) createPrePrepareBlock() (block *types.Block, blockParts *types.
 		commit = cs.LastCommits.MakeReply()
 
 	default:
-		cs.Logger.Errorw("Cannot construct pre_prepare without the previous block")
+		cs.Logger.Warnw("Cannot construct pre_prepare without the previous block")
 		return
 	}
 
@@ -893,11 +901,11 @@ func (cs *State) enterPrepare(height int64, round int32) {
 	// Sign and broadcast vote as necessary
 	cs.doPrepare(height, round)
 
-	// Once `addVote` hits any +2/3 prevotes, we will go to PrevoteWait
-	// (so we have more time to try and collect +2/3 prevotes for a single block)
+	// Once `addVote` hits any +2/3 prepares, we will go to prepareWait
+	// (so we have more time to try and collect +2/3 prepares for a single block)
 }
 
-// doPrepare 给 proposal 进行 prevote：
+// doPrepare 给 proposal 进行 prepare：
 //	1. 如果在之前的 round 里有锁定的 proposal，则给该 proposal 投票
 //	2. 如果在超时间内没有收到 proposal 或者收到了错误的 proposal，则给 nil 投票
 //	3. 给在超时间内收到的合法的 proposal 投票
@@ -911,7 +919,6 @@ func (cs *State) doPrepare(height int64, round int32) {
 	}
 
 	if cs.PrePrepareBlock == nil {
-		logger.Errorw("PrePrepareBlock is nil")
 		cs.signAddVote(types2.PrepareType, nil, types.PartSetHeader{})
 		return
 	}
@@ -919,21 +926,19 @@ func (cs *State) doPrepare(height int64, round int32) {
 	// 验证收到的 block 是否合法
 	err := cs.blockExec.ValidateBlock(cs.state, cs.PrePrepareBlock)
 	if err != nil {
-		logger.Errorw("PrePrepareBlock is invalid", "err", err)
+		logger.Warnw("PrePrepareBlock is invalid", "err", err)
 		cs.signAddVote(types2.PrepareType, nil, types.PartSetHeader{})
 		return
 	}
 
-	// 给合法的 block 进行投票
 	cs.signAddVote(types2.PrepareType, cs.PrePrepareBlock.Hash(), cs.PrePrepareBlockParts.Header())
 }
 
-// enterPrepareWait 仅仅被 addVote 方法调用，如果我们收到了大多数prevote投票，则调用 enterPrepareWait
+// enterPrepareWait 仅仅被 addVote 方法调用，如果我们收到了大多数prepare投票，则调用 enterPrepareWait
 func (cs *State) enterPrepareWait(height int64, round int32) {
 	logger := cs.Logger.With("height", height, "round", round)
 
 	if cs.Height != height || round < cs.Round || (cs.Round == round && RoundStepPrepareWait <= cs.Step) {
-		logger.Errorw("Enter prepare_wait step with invalid args", "current", fmt.Sprintf("height:%v / round:%v / step:%v", cs.Height, cs.Round, cs.Step))
 		return
 	}
 
@@ -945,10 +950,10 @@ func (cs *State) enterPrepareWait(height int64, round int32) {
 	}()
 
 	// 如果round等于0，则等待1s，如果round等于1，则等待1.5s
-	cs.scheduleTimeout(cs.config.Prevote(round), height, round, RoundStepPrepareWait)
+	cs.scheduleTimeout(cs.config.PrepareWait(round), height, round, RoundStepPrepareWait)
 }
 
-func (cs *State) enterPrecommit(height int64, round int32) {
+func (cs *State) enterCommit(height int64, round int32) {
 	logger := cs.Logger.With("height", height, "round", round)
 
 	if cs.Height != height || round < cs.Round || (cs.Round == round && RoundStepCommit <= cs.Step) {
@@ -970,16 +975,16 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 	}
 
 	if err := cs.eventBus.PublishEventPolka(cs.RoundStateEvent()); err != nil {
-		logger.Errorw("Failed publishing polka", "err", err)
+		logger.Warnw("Failed publishing polka", "err", err)
 	}
 
-	// 既然进入了precommit阶段，则说明至少收到了+2/3个prevote投票
+	// 既然进入了precommit阶段，则说明至少收到了+2/3个prepare投票
 	polRound, _ := cs.Votes.POLInfo()
 	if polRound < round {
 		panic(fmt.Sprintf("this POLRound should be %v but got %v", round, polRound))
 	}
 
-	if len(blockID.Hash) == 0 {  // 超过三分之二的prevote是给nil投票的
+	if len(blockID.Hash) == 0 {  // 超过三分之二的prepare是给nil投票的
 		if cs.LockedBlock == nil {
 		} else {
 			cs.LockedRound = -1
@@ -987,7 +992,7 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 			cs.LockedBlockParts = nil
 
 			if err := cs.eventBus.PublishEventUnlock(cs.RoundStateEvent()); err != nil {
-				logger.Errorw("Failed publishing event unlock", "err", err)
+				logger.Warnw("Failed publishing event unlock", "err", err)
 			}
 		}
 
@@ -1000,7 +1005,7 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 		cs.LockedRound = round
 
 		if err := cs.eventBus.PublishEventRelock(cs.RoundStateEvent()); err != nil {
-			logger.Errorw("Failed publishing event relock", "err", err)
+			logger.Warnw("Failed publishing event relock", "err", err)
 		}
 
 		cs.signAddVote(types2.CommitType, blockID.Hash, blockID.PartSetHeader)
@@ -1010,7 +1015,7 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 	// 给新提出的区块投票
 	if cs.PrePrepareBlock.EqualsTo(blockID.Hash) {
 		if err := cs.blockExec.ValidateBlock(cs.state, cs.PrePrepareBlock); err != nil {
-			panic(fmt.Sprintf("precommit step; +2/3 prevoted for an invalid block: %v", err))
+			panic(fmt.Sprintf("precommit step; +2/3 prepared for an invalid block: %v", err))
 			//return
 		}
 
@@ -1019,14 +1024,14 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 		cs.LockedBlockParts = cs.PrePrepareBlockParts
 
 		if err := cs.eventBus.PublishEventLock(cs.RoundStateEvent()); err != nil {
-			logger.Errorw("Failed publishing event lock", "err", err)
+			logger.Warnw("Failed publishing event lock", "err", err)
 		}
 
 		cs.signAddVote(types2.CommitType, blockID.Hash, blockID.PartSetHeader)
 		return
 	}
 
-	logger.Errorw("We get +2/3 prepares for a block we do not have; voting nil", "blockID", blockID)
+	logger.Warnw("We get +2/3 prepares for a block we do not have; voting nil", "blockID", blockID)
 	cs.LockedRound = -1
 	cs.LockedBlock = nil
 	cs.LockedBlockParts = nil
@@ -1037,14 +1042,14 @@ func (cs *State) enterPrecommit(height int64, round int32) {
 	}
 
 	if err := cs.eventBus.PublishEventUnlock(cs.RoundStateEvent()); err != nil {
-		logger.Errorw("Failed publishing event unlock", "err", err)
+		logger.Warnw("Failed publishing event unlock", "err", err)
 	}
 
 	cs.signAddVote(types2.CommitType, nil, types.PartSetHeader{})
 }
 
 // Enter: any +2/3 precommits for next round.
-func (cs *State) enterPrecommitWait(height int64, round int32) {
+func (cs *State) enterCommitWait(height int64, round int32) {
 	logger := cs.Logger.With("height", height, "round", round)
 
 	if cs.Height != height || round < cs.Round || (cs.Round == round && cs.TriggeredTimeoutCommit) {
@@ -1063,7 +1068,7 @@ func (cs *State) enterPrecommitWait(height int64, round int32) {
 	}()
 
 	// 如果round等于0，则等待1s，如果round等于1，则等待1.5s
-	cs.scheduleTimeout(cs.config.Precommit(round), height, round, RoundStepCommitWait)
+	cs.scheduleTimeout(cs.config.CommitWait(round), height, round, RoundStepCommitWait)
 }
 
 // 收到 +2/3 个precommit投票消息后，会调用此方法，enterReply 仅可被 addVote 函数调用
@@ -1102,7 +1107,7 @@ func (cs *State) enterReply(height int64, commitRound int32) {
 			cs.PrePrepareBlockParts = types.NewPartSetFromHeader(blockID.PartSetHeader)
 
 			if err := cs.eventBus.PublishEventValidBlock(cs.RoundStateEvent()); err != nil {
-				logger.Errorw("Failed publishing valid block", "err", err)
+				logger.Warnw("Failed publishing valid block", "err", err)
 			}
 
 			cs.evsw.FireEvent(types.EventValidBlock, &cs.RoundState)
@@ -1123,7 +1128,7 @@ func (cs *State) tryFinalizeAppend(height int64) {
 	// 获取 “+2/3 precommits” 对应的区块 block，如果该区块不存在，则无法完成 commit 区块的过程
 	blockID, ok := cs.Votes.Commits(cs.ReplyRound).TwoThirdsMajority()
 	if !ok || len(blockID.Hash) == 0 {
-		logger.Errorw("Failed attempt to append the block to the blockchain; there was no +2/3 majority or +2/3 was for nil")
+		logger.Warnw("Failed attempt to append the block to the blockchain; there was no +2/3 majority or +2/3 was for nil")
 		return
 	}
 
@@ -1143,8 +1148,6 @@ func (cs *State) finalizeAppend(height int64) {
 	if cs.Height != height || cs.Step != RoundStepReply {
 		return
 	}
-
-	cs.waitNextEvaluation--  // 防止网络比较差的节点落后于其他节点，在刚evaluation之后，又开始evaluation
 
 	// 判断有没有获得超过 2/3 个 precommit 投票，如果没有的话，显然是不能 commit 的
 	blockID, ok := cs.Votes.Commits(cs.ReplyRound).TwoThirdsMajority()
@@ -1200,76 +1203,61 @@ func (cs *State) finalizeAppend(height int64) {
 
 	stateCopy, err = cs.blockExec.ApplyBlock(stateCopy, types.BlockID{Hash: block.Hash(), PartSetHeader: blockParts.Header()}, block)
 	if err != nil {
-		logger.Errorw("Failed to apply block", "err", err)
+		logger.Warnw("Failed to apply block", "err", err)
 		return
 	}
-
-	if cs.Height == 8 && cs.config.Evaluation {
-		if cs.config.Evaluation {
-			cs.Logger.Infow("======================== Start The Trust Evaluation ========================", "ToleranceDelay", cs.config.ToleranceDelay)
-			cs.evsw.FireEvent(types.EventReputation, height)
-			cs.waitNextEvaluation = 5
-			cs.t.Reset(2000 * time.Millisecond)
-		}
-	} else {
-		cs.t.Reset(0)
-	}
-	<-cs.t.C
 
 	// NewHeightStep!
 	cs.updateToState(stateCopy)
 
 	// Private validator might have changed it's key pair => refetch pubkey.
 	if err := cs.updatePrivValidatorPubKey(); err != nil {
-		logger.Errorw("Failed to get private validator pubkey", "err", err)
+		logger.Warnw("Failed to get private validator pubkey", "err", err)
 	}
 
-	// cs.StartTime is already set.
-	// Schedule Round0 to start soon.
+	cs.crTrustReactor.UpdateGoods() // 给所有节点更新奖励
+
 	cs.scheduleRound0()
 }
 
 //-----------------------------------------------------------------------------
 
-// setProposal 为内部共识状态设置新的 proposal
-func (cs *State) setProposal(proposal *types.PrePrepare) error {
-	// 已经有了一个 proposal，则直接返回 nil
+// setPrePrepare 为内部共识状态设置新的 proposal
+func (cs *State) setPrePrepare(prePrepare *types.PrePrepare) error {
+	// 已经有了一个 prePrepare，则直接返回 nil
 	if cs.PrePrepare != nil {
 		return nil
 	}
 
-	// 如果 proposal 的 height 和 round 都不等于内部共识状态标识的 height 和 round，则直接返回 nil
-	if proposal.Height != cs.Height || proposal.Round != cs.Round {
+	// 如果 prePrepare 的 height 和 round 都不等于内部共识状态标识的 height 和 round，则直接返回 nil
+	if prePrepare.Height != cs.Height || prePrepare.Round != cs.Round {
 		return nil
 	}
 
-	// 如果 proposal 的 POLRound 小于 -1，或者大于等于 0 并且大于等于 proposal 的 round，则返回错误
-	// proposal 的 POLRound 不合法
-	if proposal.POLRound < -1 ||
-		(proposal.POLRound >= 0 && proposal.POLRound >= proposal.Round) {
+	// 如果 prePrepare 的 POLRound 小于 -1，或者大于等于 0 并且大于等于 prePrepare 的 round，则返回错误
+	// prePrepare 的 POLRound 不合法
+	if prePrepare.POLRound < -1 ||
+		(prePrepare.POLRound >= 0 && prePrepare.POLRound >= prePrepare.Round) {
 		return ErrInvalidProposalPOLRound
 	}
 
-	p := proposal.ToProto()
-	// 用 proposer 的 公钥验证 proposal 签名的正确性
-	if !cs.Validators.GetPrimary(cs.state.LastBlockID, cs.Round).PubKey.VerifySignature(types.PrePrepareSignBytes(cs.state.ChainID, p), proposal.Signature) {
+	p := prePrepare.ToProto()
+	// 用 proposer 的 公钥验证 prePrepare 签名的正确性
+	if !cs.Validators.GetPrimary(cs.state.LastBlockID, cs.Round).PubKey.VerifySignature(types.PrePrepareSignBytes(cs.state.ChainID, p), prePrepare.Signature) {
 		return ErrInvalidProposalSignature
 	}
 
-	proposal.Signature = p.Signature
-	cs.PrePrepare = proposal
-	// 如果内部共识状态的 PrePrepareBlockParts 不为 nil，则直接跳过，否则根据 proposal 重新设置
+	prePrepare.Signature = p.Signature
+	cs.PrePrepare = prePrepare
+	// 如果内部共识状态的 PrePrepareBlockParts 不为 nil，则直接跳过，否则根据 prePrepare 重新设置
 	if cs.PrePrepareBlockParts == nil {
-		cs.PrePrepareBlockParts = types.NewPartSetFromHeader(proposal.BlockID.PartSetHeader)
+		cs.PrePrepareBlockParts = types.NewPartSetFromHeader(prePrepare.BlockID.PartSetHeader)
 	}
 
 	return nil
 }
 
-// NOTE: block is not necessarily valid.
-// Asynchronously triggers either enterPrepare (before we timeout of propose) or tryFinalizeAppend,
-// once we have the full block.
-func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID gossip.ID) (added bool, err error) {
+func (cs *State) addPrePrepareBlockPart(msg *BlockPartMessage, peerID gossip.ID) (added bool, err error) {
 	height, round, part := msg.Height, msg.Round, msg.Part
 
 	// Blocks might be reused, so round mismatch is OK
@@ -1316,12 +1304,12 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID gossip.ID) (
 		cs.Logger.Infow("Received complete block", "height", cs.PrePrepareBlock.Height, "hash", cs.PrePrepareBlock.Hash())
 
 		if err := cs.eventBus.PublishEventCompleteProposal(cs.CompleteProposalEvent()); err != nil {
-			cs.Logger.Errorw("Failed publishing event complete proposal", "err", err)
+			cs.Logger.Warnw("Failed publishing event complete proposal", "err", err)
 		}
 
 		// Update Valid* if we can.
-		prevotes := cs.Votes.Prepares(cs.Round)
-		blockID, hasTwoThirds := prevotes.TwoThirdsMajority()
+		prepares := cs.Votes.Prepares(cs.Round)
+		blockID, hasTwoThirds := prepares.TwoThirdsMajority()
 		if hasTwoThirds && !blockID.IsZero() && (cs.ValidRound < cs.Round) {
 			if cs.PrePrepareBlock.EqualsTo(blockID.Hash) {
 				cs.Logger.Debugw("Updating valid block to new block", "valid_round", cs.Round, "valid_block_hash", cs.PrePrepareBlock.Hash())
@@ -1335,8 +1323,8 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID gossip.ID) (
 		if cs.Step <= RoundStepPrePrepare && cs.isPrePrepareComplete() {
 			// Move onto the next step
 			cs.enterPrepare(height, cs.Round)
-			if hasTwoThirds { // this is optimisation as this will be triggered when prevote is added
-				cs.enterPrecommit(height, cs.Round)
+			if hasTwoThirds { // this is optimisation as this will be triggered when prepare is added
+				cs.enterCommit(height, cs.Round)
 			}
 		} else if cs.Step == RoundStepReply {
 			// If we're waiting on the proposal block...
@@ -1359,18 +1347,15 @@ func (cs *State) tryAddVote(vote *types.Vote, peerID gossip.ID) (bool, error) {
 			if cs.privValidatorPubKey == nil {
 				return false, errPubKeyIsNotSet
 			}
-
-			// 将出错 vote 中的 ValidatorAddress 与我们自己的 privValidatorPubkey.Address 进行比较，
-			// 判断该错误 vote 是否来自于我们自己
 			if bytes.Equal(vote.ValidatorAddress, cs.privValidatorPubKey.Address()) {
-				cs.Logger.Errorw("Found conflicting vote from ourselves; did you unsafe_reset a validator?", "height", vote.Height, "round", vote.Round, "type", vote.Type)
+				cs.Logger.Warnw("Found conflicting vote from ourselves; did you unsafe_reset a validator?", "height", vote.Height, "round", vote.Round, "type", vote.Type)
 				return isSuccess, err
 			}
 
 			return isSuccess, err
 		} else if errors.Is(err, types.ErrVoteNonDeterministicSignature) {
 			// 投票具有非确定性签名
-			cs.Logger.Debugw("Vote has non-deterministic signature", "err", err)
+			cs.Logger.Warnw("Vote has non-deterministic signature", "err", err)
 		} else {
 			return isSuccess, ErrAddingVote
 		}
@@ -1400,7 +1385,7 @@ func (cs *State) addVote(vote *types.Vote, peerID gossip.ID) (added bool, err er
 		cs.evsw.FireEvent(types.EventVote, vote)
 
 		// 如果我们已经收集齐上一个区块高度中的所有 precommit 投票，并且配置允许跳过 timeoutCommit 时间，那么我们则直接跳过
-		if cs.config.SkipTimeoutCommit && cs.LastCommits.HasAll() {
+		if cs.config.SkipTimeoutReply && cs.LastCommits.HasAll() {
 			cs.enterNewRound(cs.Height, 0)
 		}
 
@@ -1429,13 +1414,13 @@ func (cs *State) addVote(vote *types.Vote, peerID gossip.ID) (added bool, err er
 	// 下面将按照 vote 的类型进行对应的处理
 	switch vote.Type {
 	case types2.PrepareType:
-		// 获取本地投票集合中针对 vote.Round 轮次的所有 prevote 投票
-		prevotes := cs.Votes.Prepares(vote.Round)
-		cs.Logger.Debugw("Added vote to prevote", "vote", vote, "prevotes", prevotes.StringShort())
+		// 获取本地投票集合中针对 vote.Round 轮次的所有 prepare 投票
+		prepares := cs.Votes.Prepares(vote.Round)
+		cs.Logger.Debugw("Added vote to prepare", "vote", vote, "prepares", prepares.StringShort())
 
-		// 判断在 vote.Round 轮次中是否收到 +2/3 个 prevote 投票
-		if blockID, ok := prevotes.TwoThirdsMajority(); ok {
-			// 如果在 vote.Round 轮次中收到 +2/3 个 prevote 投票，我们还需要进行以下判断
+		// 判断在 vote.Round 轮次中是否收到 +2/3 个 prepare 投票
+		if blockID, ok := prepares.TwoThirdsMajority(); ok {
+			// 如果在 vote.Round 轮次中收到 +2/3 个 prepare 投票，我们还需要进行以下判断
 			if (cs.LockedBlock != nil) &&
 				(cs.LockedRound < vote.Round) &&
 				(vote.Round <= cs.Round) &&
@@ -1452,7 +1437,7 @@ func (cs *State) addVote(vote *types.Vote, peerID gossip.ID) (added bool, err er
 				}
 			}
 
-			// 如果我们收到了 +2/3 个 prevote 投票，则说明本轮次提出的 proposal 是合法的，得到大多数诚实节点的认可
+			// 如果我们收到了 +2/3 个 prepare 投票，则说明本轮次提出的 proposal 是合法的，得到大多数诚实节点的认可
 			if len(blockID.Hash) != 0 && (cs.ValidRound < vote.Round) && (vote.Round == cs.Round) {
 				if cs.PrePrepareBlock.EqualsTo(blockID.Hash) {
 					cs.Logger.Debugw("Updating valid block because of POL", "valid_round", cs.ValidRound, "pol_round", vote.Round)
@@ -1478,16 +1463,16 @@ func (cs *State) addVote(vote *types.Vote, peerID gossip.ID) (added bool, err er
 		}
 
 		switch {
-		case cs.Round < vote.Round && prevotes.HasTwoThirdsAny():
-			// 如果待加入的新 vote 是来自于未来的轮次的，并且我们已经收到了 2/3 个针对该投票的 prevote，那么我们就直接进入 vote.Round
+		case cs.Round < vote.Round && prepares.HasTwoThirdsAny():
+			// 如果待加入的新 vote 是来自于未来的轮次的，并且我们已经收到了 2/3 个针对该投票的 prepare，那么我们就直接进入 vote.Round
 			cs.enterNewRound(height, vote.Round)
 
 		case cs.Round == vote.Round && RoundStepPrepare <= cs.Step:
-			blockID, ok := prevotes.TwoThirdsMajority()
+			blockID, ok := prepares.TwoThirdsMajority()
 			if ok && (cs.isPrePrepareComplete() || len(blockID.Hash) == 0) {
-				// 如果待加入的新 vote 正是来自于当前轮次的，并且已经收到了针对该 vote 超过 2/3 个 prevote，则进入 precommit 阶段
-				cs.enterPrecommit(height, vote.Round)
-			} else if prevotes.HasTwoThirdsAny() {
+				// 如果待加入的新 vote 正是来自于当前轮次的，并且已经收到了针对该 vote 超过 2/3 个 prepare，则进入 precommit 阶段
+				cs.enterCommit(height, vote.Round)
+			} else if prepares.HasTwoThirdsAny() {
 				cs.enterPrepareWait(height, vote.Round)
 			}
 
@@ -1506,19 +1491,19 @@ func (cs *State) addVote(vote *types.Vote, peerID gossip.ID) (added bool, err er
 		if ok {
 			// Executed as TwoThirdsMajority could be from a higher round
 			cs.enterNewRound(height, vote.Round)
-			cs.enterPrecommit(height, vote.Round)
+			cs.enterCommit(height, vote.Round)
 
-			if len(blockID.Hash) != 0 { // 如果收到了超过 2/3 个 precommit，则会进入 commit 阶段
+			if len(blockID.Hash) != 0 { // 如果收到了超过 2/3 个 precommit，则会进入 reply 阶段
 				cs.enterReply(height, vote.Round)
-				if cs.config.SkipTimeoutCommit && precommits.HasAll() {
+				if cs.config.SkipTimeoutReply && precommits.HasAll() {
 					cs.enterNewRound(cs.Height, 0)
 				}
 			} else {
-				cs.enterPrecommitWait(height, vote.Round)
+				cs.enterCommitWait(height, vote.Round)
 			}
 		} else if cs.Round <= vote.Round && precommits.HasTwoThirdsAny() {
 			cs.enterNewRound(height, vote.Round)
-			cs.enterPrecommitWait(height, vote.Round)
+			cs.enterCommitWait(height, vote.Round)
 		}
 
 	default:
@@ -1541,19 +1526,6 @@ func (cs *State) signVote(msgType types2.SignedMsgType, hash []byte, header type
 
 	addr := cs.privValidatorPubKey.Address()
 	valIdx, _ := cs.Validators.GetByAddress(addr)
-
-	//#################################################################################################
-	// 拜占庭节点所为！
-	if cs.config.IsByzantine {
-		if len(hash) != 0 {
-			hash[srrand.Int()%len(hash)] = byte(srrand.Int()%255+1)
-		}
-		if srrand.Float64() > 0.5 {
-			return nil, errors.New("I am byzantine node")
-		}
-		time.Sleep(time.Millisecond * time.Duration(lazy) + time.Duration(srrand.Intn(1000)) * time.Millisecond)
-	}
-	//#################################################################################################
 
 	vote := &types.Vote{
 		ValidatorAddress: addr,
@@ -1597,7 +1569,7 @@ func (cs *State) signAddVote(msgType types2.SignedMsgType, hash []byte, header t
 
 	if cs.privValidatorPubKey == nil {
 		// Vote won't be signed, but it's not critical.
-		cs.Logger.Errorw(fmt.Sprintf("signAddVote: %v", errPubKeyIsNotSet))
+		cs.Logger.Warnw(fmt.Sprintf("signAddVote: %v", errPubKeyIsNotSet))
 		return nil
 	}
 
@@ -1613,7 +1585,7 @@ func (cs *State) signAddVote(msgType types2.SignedMsgType, hash []byte, header t
 		return vote
 	}
 
-	cs.Logger.Errorw("Failed signing vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
+	cs.Logger.Warnw("Failed signing vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
 	return nil
 }
 

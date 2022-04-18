@@ -492,7 +492,7 @@ func (w *WSEvents) OnStart() error {
 // OnStop implements service.Service by stopping WSClient.
 func (w *WSEvents) OnStop() {
 	if err := w.ws.Stop(); err != nil {
-		w.Logger.Errorw("Can't stop ws client", "err", err)
+		w.Logger.Warnw("Can't stop ws client", "err", err)
 	}
 }
 
@@ -582,7 +582,7 @@ func (w *WSEvents) redoSubscriptionsAfter(d time.Duration) {
 	for q := range w.subscriptions {
 		err := w.ws.Subscribe(context.Background(), q)
 		if err != nil {
-			w.Logger.Errorw("Failed to resubscribe", "err", err)
+			w.Logger.Warnw("Failed to resubscribe", "err", err)
 		}
 	}
 }
@@ -600,7 +600,7 @@ func (w *WSEvents) eventListener() {
 			}
 
 			if resp.Error != nil {
-				w.Logger.Errorw("WS error", "err", resp.Error.Error())
+				w.Logger.Warnw("WS error", "err", resp.Error.Error())
 				// Error can be ErrAlreadySubscribed or max client (subscriptions per
 				// client) reached or SRBFT exited.
 				// We can ignore ErrAlreadySubscribed, but need to retry in other
@@ -616,7 +616,7 @@ func (w *WSEvents) eventListener() {
 			result := new(coretypes.ResultEvent)
 			err := srjson.Unmarshal(resp.Result, result)
 			if err != nil {
-				w.Logger.Errorw("failed to unmarshal response", "err", err)
+				w.Logger.Warnw("failed to unmarshal response", "err", err)
 				continue
 			}
 
@@ -628,7 +628,7 @@ func (w *WSEvents) eventListener() {
 					select {
 					case out <- *result:
 					default:
-						w.Logger.Errorw("wanted to publish ResultEvent, but out channel is full", "result", result, "query", result.Query)
+						w.Logger.Warnw("wanted to publish ResultEvent, but out channel is full", "result", result, "query", result.Query)
 					}
 				}
 			}

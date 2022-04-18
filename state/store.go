@@ -1,14 +1,14 @@
 package state
 
 import (
+	"errors"
+	"fmt"
 	srmath "github.com/232425wxy/BFT/libs/math"
 	sros "github.com/232425wxy/BFT/libs/os"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
 	protostate "github.com/232425wxy/BFT/proto/state"
 	prototypes "github.com/232425wxy/BFT/proto/types"
 	"github.com/232425wxy/BFT/types"
-	"errors"
-	"fmt"
 	"github.com/gogo/protobuf/proto"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -43,9 +43,6 @@ func calcABCIResponsesKey(height int64) []byte {
 // It is used to retrieve current state and save and load ABCI responses,
 // validators and consensus parameters
 type Store interface {
-	// LoadFromDBOrGenesisFile loads the most recent state.
-	// If the chain is new it will use the genesis file from the provided genesis file path as the current state.
-	LoadFromDBOrGenesisFile(string) (State, error)
 	// LoadFromDBOrGenesisDoc loads the most recent state.
 	// If the chain is new it will use the genesis doc as the current state.
 	LoadFromDBOrGenesisDoc(*types.GenesisDoc) (State, error)
@@ -73,24 +70,6 @@ var _ Store = (*dbStore)(nil)
 // 存储状态的
 func NewStore(db dbm.DB) Store {
 	return dbStore{db}
-}
-
-// LoadStateFromDBOrGenesisFile loads the most recent state from the database,
-// or creates a new one from the given genesisFilePath.
-func (store dbStore) LoadFromDBOrGenesisFile(genesisFilePath string) (State, error) {
-	state, err := store.Load()
-	if err != nil {
-		return State{}, err
-	}
-	if state.IsEmpty() {
-		var err error
-		state, err = MakeGenesisStateFromFile(genesisFilePath)
-		if err != nil {
-			return state, err
-		}
-	}
-
-	return state, nil
 }
 
 // LoadStateFromDBOrGenesisDoc 从数据库中加载最新的状态信息，如果数据库里还没有存储状态信息，

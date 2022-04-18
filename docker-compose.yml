@@ -76,34 +76,34 @@ services:
       localnet:
         ipv4_address: 192.166.1.6
 
-#  node5:
-#    container_name: node5
-#    image: "bft"
-#    ports:
-#      - "36666-36667:36656-36657"
-#    environment:
-#      - ID=5
-#      - LOG=${LOG:-bft.log}
-#    volumes:
-#      - /root/BFT:/bft:Z
-#    networks:
-#      localnet:
-#        ipv4_address: 192.166.1.7
-#
-#  node6:
-#    container_name: node6
-#    image: "bft"
-#    environment:
-#      - ID=6
-#      - LOG=${LOG:-bft.log}
-#    ports:
-#      - "36668-36669:36656-36657"
-#    volumes:
-#      - /root/BFT:/bft:Z
-#    networks:
-#      localnet:
-#        ipv4_address: 192.166.1.8
-#
+  node5:
+    container_name: node5
+    image: "bft"
+    ports:
+      - "36666-36667:36656-36657"
+    environment:
+      - ID=5
+      - LOG=${LOG:-bft.log}
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.7
+
+  node6:
+    container_name: node6
+    image: "bft"
+    environment:
+      - ID=6
+      - LOG=${LOG:-bft.log}
+    ports:
+      - "36668-36669:36656-36657"
+    volumes:
+      - /root/BFT:/bft:Z
+    networks:
+      localnet:
+        ipv4_address: 192.166.1.8
+
 #  node7:
 #    container_name: node7
 #    image: "bft"
@@ -313,7 +313,7 @@ services:
 #    networks:
 #      localnet:
 #        ipv4_address: 192.166.1.23
-#
+
 #  node22:
 #    container_name: node22
 #    image: "bft"

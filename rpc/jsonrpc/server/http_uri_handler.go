@@ -1,11 +1,11 @@
 package server
 
 import (
+	"encoding/hex"
+	"fmt"
 	srjson "github.com/232425wxy/BFT/libs/json"
 	"github.com/232425wxy/BFT/libs/log"
 	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
-	"encoding/hex"
-	"fmt"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -26,7 +26,7 @@ func makeHTTPHandler(rpcFunc *RPCFunc, logger log.CRLogger) func(http.ResponseWr
 		return func(w http.ResponseWriter, r *http.Request) {
 			res := types.RPCMethodNotFoundError(dummyID)
 			if wErr := WriteRPCResponseHTTPError(w, http.StatusNotFound, res); wErr != nil {
-				logger.Errorw("failed to write response", "res", res, "err", wErr)
+				logger.Warnw("failed to write response", "res", res, "err", wErr)
 			}
 		}
 	}
@@ -44,7 +44,7 @@ func makeHTTPHandler(rpcFunc *RPCFunc, logger log.CRLogger) func(http.ResponseWr
 				fmt.Errorf("error converting http params to arguments: %w", err),
 			)
 			if wErr := WriteRPCResponseHTTPError(w, http.StatusInternalServerError, res); wErr != nil {
-				logger.Errorw("failed to write response", "res", res, "err", wErr)
+				logger.Warnw("failed to write response", "res", res, "err", wErr)
 			}
 			return
 		}
@@ -57,13 +57,13 @@ func makeHTTPHandler(rpcFunc *RPCFunc, logger log.CRLogger) func(http.ResponseWr
 		if err != nil {
 			if err := WriteRPCResponseHTTPError(w, http.StatusInternalServerError,
 				types.RPCInternalError(dummyID, err)); err != nil {
-				logger.Errorw("failed to write response", "res", result, "err", err)
+				logger.Warnw("failed to write response", "res", result, "err", err)
 				return
 			}
 			return
 		}
 		if err := WriteRPCResponseHTTP(w, types.NewRPCSuccessResponse(dummyID, result)); err != nil {
-			logger.Errorw("failed to write response", "res", result, "err", err)
+			logger.Warnw("failed to write response", "res", result, "err", err)
 			return
 		}
 	}

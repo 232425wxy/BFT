@@ -1,12 +1,12 @@
 package server
 
 import (
-	srjson "github.com/232425wxy/BFT/libs/json"
-	"github.com/232425wxy/BFT/libs/log"
-	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	srjson "github.com/232425wxy/BFT/libs/json"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -26,7 +26,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.CRLogger) http.H
 				fmt.Errorf("error reading request body: %w", err),
 			)
 			if wErr := WriteRPCResponseHTTPError(w, http.StatusBadRequest, res); wErr != nil {
-				logger.Errorw("failed to write response", "res", res, "err", wErr)
+				logger.Warnw("failed to write response", "res", res, "err", wErr)
 			}
 			return
 		}
@@ -49,7 +49,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.CRLogger) http.H
 			if err := json.Unmarshal(b, &request); err != nil {
 				res := types.RPCParseError(fmt.Errorf("error unmarshaling request: %w", err))
 				if wErr := WriteRPCResponseHTTPError(w, http.StatusInternalServerError, res); wErr != nil {
-					logger.Errorw("failed to write response", "res", res, "err", wErr)
+					logger.Warnw("failed to write response", "res", res, "err", wErr)
 				}
 				return
 			}
@@ -105,7 +105,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.CRLogger) http.H
 
 		if len(responses) > 0 {
 			if wErr := WriteRPCResponseHTTP(w, responses...); wErr != nil {
-				logger.Errorw("failed to write responses", "res", responses, "err", wErr)
+				logger.Warnw("failed to write responses", "res", responses, "err", wErr)
 			}
 		}
 	}

@@ -59,7 +59,7 @@ func (cs *State) ReplayFile(file string, console bool) error {
 	}
 	defer func() {
 		if err := cs.eventBus.Unsubscribe(ctx, subscriber, types.EventQueryNewRoundStep); err != nil {
-			cs.Logger.Errorw("Error unsubscribing to event bus", "err", err)
+			cs.Logger.Warnw("Error unsubscribing to event bus", "err", err)
 		}
 	}()
 
@@ -164,7 +164,7 @@ func (pb *playback) replayReset(count int, newStepSub types.Subscription) error 
 }
 
 func (cs *State) startForReplay() {
-	cs.Logger.Errorw("Replay commands are disabled until someone updates them and writes tests")
+	cs.Logger.Warnw("Replay commands are disabled until someone updates them and writes tests")
 }
 
 // console function for parsing input and running commands
@@ -215,13 +215,13 @@ func (pb *playback) replayConsoleLoop() int {
 			}
 			defer func() {
 				if err := pb.cs.eventBus.Unsubscribe(ctx, subscriber, types.EventQueryNewRoundStep); err != nil {
-					pb.cs.Logger.Errorw("Error unsubscribing from eventBus", "err", err)
+					pb.cs.Logger.Warnw("Error unsubscribing from eventBus", "err", err)
 				}
 			}()
 
 			if len(tokens) == 1 {
 				if err := pb.replayReset(1, newStepSub); err != nil {
-					pb.cs.Logger.Errorw("Replay reset error", "err", err)
+					pb.cs.Logger.Warnw("Replay reset error", "err", err)
 				}
 			} else {
 				i, err := strconv.Atoi(tokens[1])
@@ -230,7 +230,7 @@ func (pb *playback) replayConsoleLoop() int {
 				} else if i > pb.count {
 					fmt.Printf("argument to back must not be larger than the current count (%d)\n", pb.count)
 				} else if err := pb.replayReset(i, newStepSub); err != nil {
-					pb.cs.Logger.Errorw("Replay reset error", "err", err)
+					pb.cs.Logger.Warnw("Replay reset error", "err", err)
 				}
 			}
 

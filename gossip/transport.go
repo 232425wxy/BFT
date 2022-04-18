@@ -1,10 +1,10 @@
 package gossip
 
 import (
-	srlog "github.com/232425wxy/BFT/libs/log"
-	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"context"
 	"fmt"
+	srlog "github.com/232425wxy/BFT/libs/log"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"net"
 	"time"
 

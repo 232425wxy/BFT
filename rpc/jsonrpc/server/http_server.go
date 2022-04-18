@@ -2,12 +2,12 @@
 package server
 
 import (
-	"github.com/232425wxy/BFT/libs/log"
-	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/libs/log"
+	"github.com/232425wxy/BFT/rpc/jsonrpc/types"
 	"golang.org/x/net/netutil"
 	"net"
 	"net/http"
@@ -83,7 +83,7 @@ func ServeTLS(
 	}
 	err := s.ServeTLS(listener, certFile, keyFile)
 
-	logger.Errorw("RPC HTTPS server stopped", "err", err)
+	logger.Warnw("RPC HTTPS server stopped", "err", err)
 	return err
 }
 
@@ -164,7 +164,7 @@ func RecoverAndLogHandler(handler http.Handler, logger log.CRLogger) http.Handle
 				// If RPCResponse
 				if res, ok := e.(types.RPCResponse); ok {
 					if wErr := WriteRPCResponseHTTP(rww, res); wErr != nil {
-						logger.Errorw("failed to write response", "res", res, "err", wErr)
+						logger.Warnw("failed to write response", "res", res, "err", wErr)
 					}
 				} else {
 					// Panics can contain anything, attempt to normalize it as an error.
@@ -179,10 +179,10 @@ func RecoverAndLogHandler(handler http.Handler, logger log.CRLogger) http.Handle
 					default:
 					}
 
-					logger.Errorw("panic in RPC HTTP handler", "err", e, "stack", string(debug.Stack()))
+					logger.Warnw("panic in RPC HTTP handler", "err", e, "stack", string(debug.Stack()))
 					res := types.RPCInternalError(types.JSONRPCIntID(-1), err)
 					if wErr := WriteRPCResponseHTTPError(rww, http.StatusInternalServerError, res); wErr != nil {
-						logger.Errorw("failed to write response", "res", res, "err", wErr)
+						logger.Warnw("failed to write response", "res", res, "err", wErr)
 					}
 				}
 			}

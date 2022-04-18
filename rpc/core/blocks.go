@@ -51,7 +51,7 @@ func filterMinMax(base, height, min, max, limit int64) (int64, int64, error) {
 		min = 1
 	}
 	if max == 0 {
-		max = height
+		max = height - 1
 	}
 
 	// limit max to the height

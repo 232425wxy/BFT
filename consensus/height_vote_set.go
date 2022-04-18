@@ -1,13 +1,13 @@
 package consensus
 
 import (
+	"errors"
+	"fmt"
 	"github.com/232425wxy/BFT/gossip"
 	srjson "github.com/232425wxy/BFT/libs/json"
 	srmath "github.com/232425wxy/BFT/libs/math"
 	prototypes "github.com/232425wxy/BFT/proto/types"
 	"github.com/232425wxy/BFT/types"
-	"errors"
-	"fmt"
 	"strings"
 	"sync"
 )

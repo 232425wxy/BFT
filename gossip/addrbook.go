@@ -1,14 +1,14 @@
 package gossip
 
 import (
+	crand "crypto/rand"
+	"encoding/json"
+	"fmt"
 	"github.com/232425wxy/BFT/crypto"
 	"github.com/232425wxy/BFT/libs/log"
 	srrand "github.com/232425wxy/BFT/libs/rand"
 	"github.com/232425wxy/BFT/libs/service"
 	"github.com/232425wxy/BFT/libs/tempfile"
-	crand "crypto/rand"
-	"encoding/json"
-	"fmt"
 	"github.com/minio/highwayhash"
 	"os"
 	"sync"
@@ -188,12 +188,12 @@ func (a *AddrBook) saveToFile(filePath string) {
 
 	jsonBytes, err := json.MarshalIndent(aJSON, "", "\t")
 	if err != nil {
-		a.Logger.Errorw("Failed to save AddrBook to file", "err", err)
+		a.Logger.Warnw("Failed to save AddrBook to file", "err", err)
 		return
 	}
 	err = tempfile.WriteFileAtomic(filePath, jsonBytes, 0644)
 	if err != nil {
-		a.Logger.Errorw("Failed to save AddrBook to file", "file", filePath, "err", err)
+		a.Logger.Warnw("Failed to save AddrBook to file", "file", filePath, "err", err)
 	}
 }
 

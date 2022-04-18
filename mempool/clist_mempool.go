@@ -1,6 +1,10 @@
 package mempool
 
 import (
+	"bytes"
+	"container/list"
+	"crypto/sha256"
+	"fmt"
 	"github.com/232425wxy/BFT/config"
 	"github.com/232425wxy/BFT/gossip"
 	auto "github.com/232425wxy/BFT/libs/autofile"
@@ -11,10 +15,6 @@ import (
 	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"github.com/232425wxy/BFT/proxy"
 	"github.com/232425wxy/BFT/types"
-	"bytes"
-	"container/list"
-	"crypto/sha256"
-	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -147,7 +147,7 @@ func (mem *CListMempool) InitWAL() error {
 // CloseWAL 关闭 .wal 句柄
 func (mem *CListMempool) CloseWAL() {
 	if err := mem.wal.Close(); err != nil {
-		mem.logger.Errorw("Error closing WAL", "err", err)
+		mem.logger.Warnw("Error closing WAL", "err", err)
 	}
 	mem.wal = nil
 }
@@ -396,7 +396,7 @@ func (mem *CListMempool) resCbFirstTime(
 			if err := mem.isFull(len(tx)); err != nil {
 				// remove from cache (mempool might have a space later)
 				mem.cache.Remove(tx)
-				mem.logger.Errorw(err.Error())
+				mem.logger.Warnw(err.Error())
 				return
 			}
 

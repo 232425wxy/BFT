@@ -1,13 +1,13 @@
 package state
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	srtime "github.com/232425wxy/BFT/libs/time"
 	protostate "github.com/232425wxy/BFT/proto/state"
 	prototypes "github.com/232425wxy/BFT/proto/types"
 	"github.com/232425wxy/BFT/types"
-	"bytes"
-	"errors"
-	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"io/ioutil"
 	"time"
@@ -264,18 +264,6 @@ func MedianTime(commit *types.Reply, validators *types.ValidatorSet) time.Time {
 
 //------------------------------------------------------------------------
 // Genesis
-
-// MakeGenesisStateFromFile reads and unmarshals state from the given
-// file.
-//
-// Used during replay and in tests.
-func MakeGenesisStateFromFile(genDocFile string) (State, error) {
-	genDoc, err := MakeGenesisDocFromFile(genDocFile)
-	if err != nil {
-		return State{}, err
-	}
-	return MakeGenesisState(genDoc)
-}
 
 // MakeGenesisDocFromFile reads and unmarshals genesis doc from the given file.
 func MakeGenesisDocFromFile(genDocFile string) (*types.GenesisDoc, error) {

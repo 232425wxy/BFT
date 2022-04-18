@@ -1,11 +1,11 @@
 package types
 
 import (
+	"errors"
+	"fmt"
 	"github.com/232425wxy/BFT/crypto"
 	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
 	prototypes "github.com/232425wxy/BFT/proto/types"
-	"errors"
-	"fmt"
 )
 
 type Address = crypto.Address

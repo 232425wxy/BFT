@@ -1,10 +1,10 @@
 package gossip
 
 import (
-	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"bufio"
 	"errors"
 	"fmt"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"io"
 	"math"
 	"net"
@@ -299,7 +299,7 @@ func (c *MultiConn) flush() {
 // _recover 捕获 panic，panic 通常由于与 peer 断开连接造成的
 func (c *MultiConn) _recover() {
 	if r := recover(); r != nil {
-		c.Logger.Errorw("MultiConn panicked", "err", r, "stack", string(debug.Stack()))
+		c.Logger.Warnw("MultiConn panicked", "err", r, "stack", string(debug.Stack()))
 		c.stopForError(fmt.Errorf("recovered from panic: %v", r))
 	}
 }
@@ -309,7 +309,7 @@ func (c *MultiConn) _recover() {
 // 然后继续深入调用 MultiConn.stopServices() 方法。
 func (c *MultiConn) stopForError(r interface{}) {
 	if err := c.Stop(); err != nil {
-		c.Logger.Errorw("Error stopping connection", "err", err)
+		c.Logger.Warnw("Error stopping connection", "err", err)
 	}
 	if atomic.CompareAndSwapUint32(&c.errored, 0, 1) {
 		if c.onError != nil {
@@ -332,7 +332,7 @@ func (c *MultiConn) Send(chID byte, msgBytes []byte) bool {
 	// 将消息转交给 Channel
 	channel, ok := c.channelsIdx[chID]
 	if !ok {
-		c.Logger.Errorw(fmt.Sprintf("Cannot sendSignal bytes, unknown channel %X", chID))
+		c.Logger.Warnw(fmt.Sprintf("Cannot sendSignal bytes, unknown channel %X", chID))
 		return false
 	}
 
@@ -361,7 +361,7 @@ func (c *MultiConn) TrySend(chID byte, msgBytes []byte) bool {
 	// 将消息转交给 Channel
 	channel, ok := c.channelsIdx[chID]
 	if !ok {
-		c.Logger.Errorw(fmt.Sprintf("Cannot sendSignal bytes, unknown channel %X", chID))
+		c.Logger.Warnw(fmt.Sprintf("Cannot sendSignal bytes, unknown channel %X", chID))
 		return false
 	}
 
@@ -385,7 +385,7 @@ func (c *MultiConn) CanSend(chID byte) bool {
 
 	channel, ok := c.channelsIdx[chID]
 	if !ok {
-		c.Logger.Errorw(fmt.Sprintf("Unknown channel %X", chID))
+		c.Logger.Warnw(fmt.Sprintf("Unknown channel %X", chID))
 		return false
 	}
 	return channel.canSend()
@@ -436,7 +436,7 @@ FOR_LOOP:
 			c.Logger.Debugw("Send Pong")
 			_, err = protoWriter.WriteMsg(mustWrapPacket(&protogossip.PacketPong{}))
 			if err != nil {
-				c.Logger.Errorw("Failed to sendSignal PacketPong", "err", err)
+				c.Logger.Warnw("Failed to sendSignal PacketPong", "err", err)
 				break SELECTION
 			}
 			c.flush()
@@ -458,7 +458,7 @@ FOR_LOOP:
 			break FOR_LOOP
 		}
 		if err != nil {
-			c.Logger.Errorw("Connection failed @ sendRoutine", "conn", c, "err", err)
+			c.Logger.Warnw("Connection failed @ sendRoutine", "conn", c, "err", err)
 			c.stopForError(err)
 			break FOR_LOOP
 		}
@@ -510,7 +510,7 @@ func (c *MultiConn) sendPacketMsg() bool {
 	// 让被选中的 Channel 打包数据并发送出去
 	_, err := leastChannel.writePacketMsgTo(c.bufConnWriter)
 	if err != nil {
-		c.Logger.Errorw("Failed to write PacketMsg", "err", err)
+		c.Logger.Warnw("Failed to write PacketMsg", "err", err)
 		c.stopForError(err)
 		return true
 	}
@@ -598,7 +598,7 @@ FOR_LOOP:
 			}
 		default:
 			err := fmt.Errorf("unknown message type %v", reflect.TypeOf(packet))
-			c.Logger.Errorw("Connection failed @ recvRoutine", "conn", c, "err", err)
+			c.Logger.Warnw("Connection failed @ recvRoutine", "conn", c, "err", err)
 			c.stopForError(err)
 			break FOR_LOOP
 		}

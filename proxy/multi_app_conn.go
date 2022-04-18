@@ -1,11 +1,11 @@
 package proxy
 
 import (
+	"fmt"
 	abcicli "github.com/232425wxy/BFT/abci/client"
 	srlog "github.com/232425wxy/BFT/libs/log"
 	sros "github.com/232425wxy/BFT/libs/os"
 	"github.com/232425wxy/BFT/libs/service"
-	"fmt"
 )
 
 const (
@@ -84,12 +84,12 @@ func (app *AppConns) OnStop() {
 
 func (app *AppConns) killSROnClientError() {
 	killFn := func(conn string, err error, logger srlog.CRLogger) {
-		logger.Errorw(
+		logger.Warnw(
 			fmt.Sprintf("%s connection terminated. Did the application crash? Please restart SRBFT", conn),
 			"err", err)
 		killErr := sros.Kill()
 		if killErr != nil {
-			logger.Errorw("Failed to kill this process - please do so manually", "err", killErr)
+			logger.Warnw("Failed to kill this process - please do so manually", "err", killErr)
 		}
 	}
 
@@ -112,17 +112,17 @@ func (app *AppConns) killSROnClientError() {
 func (app *AppConns) stopAllClients() {
 	if app.consensusConnClient != nil {
 		if err := app.consensusConnClient.Stop(); err != nil {
-			app.Logger.Errorw("error while stopping consensus client", "error", err)
+			app.Logger.Warnw("error while stopping consensus client", "error", err)
 		}
 	}
 	if app.mempoolConnClient != nil {
 		if err := app.mempoolConnClient.Stop(); err != nil {
-			app.Logger.Errorw("error while stopping mempool client", "error", err)
+			app.Logger.Warnw("error while stopping mempool client", "error", err)
 		}
 	}
 	if app.queryConnClient != nil {
 		if err := app.queryConnClient.Stop(); err != nil {
-			app.Logger.Errorw("error while stopping query client", "error", err)
+			app.Logger.Warnw("error while stopping query client", "error", err)
 		}
 	}
 }

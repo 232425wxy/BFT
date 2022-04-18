@@ -1,12 +1,12 @@
 package types
 
 import (
-	"github.com/232425wxy/BFT/crypto/merkle"
-	"github.com/232425wxy/BFT/crypto/srhash"
-	prototypes "github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/crypto/merkle"
+	"github.com/232425wxy/BFT/crypto/srhash"
+	prototypes "github.com/232425wxy/BFT/proto/types"
 	"math"
 	"runtime"
 	"sort"
@@ -183,16 +183,6 @@ func processChanges(origChanges []*Validator) (updates []*Validator, err error) 
 	return updates, err
 }
 
-func numNewValidators(updates []*Validator, vals *ValidatorSet) int {
-	numNewValidators := 0
-	for _, valUpdate := range updates {
-		if !vals.HasAddress(valUpdate.Address) {
-			numNewValidators++
-		}
-	}
-	return numNewValidators
-}
-
 func (vals *ValidatorSet) applyUpdates(updates []*Validator) {
 	existing := vals.Validators
 	sort.Sort(ValidatorsByAddress(existing))
@@ -236,8 +226,6 @@ func (vals *ValidatorSet) updateWithChangeSet(changes []*Validator) error {
 		return nil
 	}
 
-	// 检查 changes 里面有没有重复的 Validator，并且将投票权大于 0 的 Validator 放入到 updates 中，
-	// 而投票权等于 0 的 Validator 被放入到 removals 中
 	updates, err := processChanges(changes)
 	if err != nil {
 		return err

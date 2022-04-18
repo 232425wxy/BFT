@@ -1,11 +1,11 @@
 package types
 
 import (
-	srbytes "github.com/232425wxy/BFT/libs/bytes"
-	"github.com/232425wxy/BFT/proto/types"
 	"bytes"
 	"errors"
 	"fmt"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	"github.com/232425wxy/BFT/proto/types"
 	"github.com/gogo/protobuf/proto"
 	"sync"
 )

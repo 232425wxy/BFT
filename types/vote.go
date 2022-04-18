@@ -1,15 +1,15 @@
 package types
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"github.com/232425wxy/BFT/crypto"
 	"github.com/232425wxy/BFT/libs/bits"
 	srbytes "github.com/232425wxy/BFT/libs/bytes"
 	srjson "github.com/232425wxy/BFT/libs/json"
 	"github.com/232425wxy/BFT/libs/protoio"
 	prototypes "github.com/232425wxy/BFT/proto/types"
-	"bytes"
-	"errors"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -410,7 +410,7 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 	// 我们不应该添加两个相同的投票信息
 	if existing, ok := voteSet.getVote(valIndex, blockKey); ok {
 		if bytes.Equal(existing.Signature, vote.Signature) {
-			return false, nil // duplicate
+			return false, nil // 重复投票
 		}
 		// 一个投票者投出了两个不一样的投票，模棱两可，属于恶意节点了属于是
 		return false, fmt.Errorf("existing vote: %v; new vote: %v: %w", existing, vote, ErrVoteNonDeterministicSignature)

@@ -1,12 +1,13 @@
 package gossip
 
 import (
-	"github.com/232425wxy/BFT/crypto"
-	srbytes "github.com/232425wxy/BFT/libs/bytes"
-	protogossip "github.com/232425wxy/BFT/proto/gossip"
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/crypto"
+	cryptoenc "github.com/232425wxy/BFT/crypto/encoding"
+	srbytes "github.com/232425wxy/BFT/libs/bytes"
+	protogossip "github.com/232425wxy/BFT/proto/gossip"
 )
 
 const (
@@ -28,7 +29,7 @@ type NodeInfo struct {
 	ChainID  string           `json:"network"`
 	Channels srbytes.HexBytes `json:"channels"` // 该节点所知道的所有 channel
 
-	Address crypto.Address
+	Pubkey crypto.PubKey  `json:"pubkey"`
 }
 
 
@@ -113,12 +114,16 @@ func (info NodeInfo) HasChannel(chID byte) bool {
 func (info NodeInfo) ToProto() *protogossip.NodeInfo {
 
 	n := new(protogossip.NodeInfo)
+	pk, err := cryptoenc.PubKeyToProto(info.Pubkey)
+	if err != nil {
+		panic(err)
+	}
 
 	n.NodeID = string(info.NodeID)
 	n.ListenAddr = info.ListenAddr
 	n.Network = info.ChainID
 	n.Channels = info.Channels
-	n.Address = info.Address
+	n.PubKey = pk
 
 	return n
 }
@@ -127,12 +132,16 @@ func NodeInfoFromProto(pb *protogossip.NodeInfo) (NodeInfo, error) {
 	if pb == nil {
 		return NodeInfo{}, errors.New("nil node info")
 	}
+	pk, err := cryptoenc.PubKeyFromProto(pb.PubKey)
+	if err != nil {
+		panic(err)
+	}
 	dni := NodeInfo{
 		NodeID:     ID(pb.NodeID),
 		ListenAddr: pb.ListenAddr,
 		ChainID:    pb.Network,
 		Channels:   pb.Channels,
-		Address:    pb.Address,
+		Pubkey:     pk,
 	}
 
 	return dni, nil

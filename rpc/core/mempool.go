@@ -1,10 +1,10 @@
 package core
 
 import (
-	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"context"
 	"errors"
 	"fmt"
+	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"time"
 
 	mempl "github.com/232425wxy/BFT/mempool"
@@ -66,13 +66,13 @@ func BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadc
 	deliverTxSub, err := env.EventBus.Subscribe(subCtx, subscriber, q)
 	if err != nil {
 		err = fmt.Errorf("failed to subscribe to tx: %w", err)
-		env.Logger.Errorw("Error on broadcast_tx_commit", "err", err)
+		env.Logger.Warnw("Error on broadcast_tx_commit", "err", err)
 		return nil, err
 	}
 	defer func() {
 		// BroadcastTxCommit 执行完以后取消该订阅
 		if err := env.EventBus.Unsubscribe(context.Background(), subscriber, q); err != nil {
-			env.Logger.Errorw("Error unsubscribing from eventBus", "err", err)
+			env.Logger.Warnw("Error unsubscribing from eventBus", "err", err)
 		}
 	}()
 
@@ -83,7 +83,7 @@ func BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadc
 		checkTxResCh <- res
 	}, mempl.TxInfo{})
 	if err != nil {
-		env.Logger.Errorw("Error on broadcastTxCommit", "err", err)
+		env.Logger.Warnw("Error on broadcastTxCommit", "err", err)
 		return nil, fmt.Errorf("error on broadcastTxCommit: %v", err)
 	}
 	checkTxResMsg := <-checkTxResCh
@@ -115,7 +115,7 @@ func BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadc
 			reason = deliverTxSub.Err().Error()
 		}
 		err = fmt.Errorf("deliverTxSub was cancelled (reason: %s)", reason)
-		env.Logger.Errorw("Error on broadcastTxCommit", "err", err)
+		env.Logger.Warnw("Error on broadcastTxCommit", "err", err)
 		return &ctypes.ResultBroadcastTxCommit{
 			CheckTx:   *checkTxRes,
 			DeliverTx: protoabci.ResponseDeliverTx{},
@@ -123,7 +123,7 @@ func BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadc
 		}, err
 	case <-time.After(env.Config.TimeoutBroadcastTxCommit):
 		err = errors.New("timed out waiting for tx to be included in a block")
-		env.Logger.Errorw("Error on broadcastTxCommit", "err", err)
+		env.Logger.Warnw("Error on broadcastTxCommit", "err", err)
 		return &ctypes.ResultBroadcastTxCommit{
 			CheckTx:   *checkTxRes,
 			DeliverTx: protoabci.ResponseDeliverTx{},

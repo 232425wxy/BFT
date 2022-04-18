@@ -1,10 +1,10 @@
 package mempool
 
 import (
+	"fmt"
 	"github.com/232425wxy/BFT/gossip"
 	protoabci "github.com/232425wxy/BFT/proto/abci"
 	"github.com/232425wxy/BFT/types"
-	"fmt"
 )
 
 // Mempool defines the mempool interface.

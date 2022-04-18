@@ -1,13 +1,14 @@
 package node
 
 import (
-	"github.com/232425wxy/BFT/blockchain"
-	"github.com/232425wxy/BFT/gossip"
-	srtime "github.com/232425wxy/BFT/libs/time"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/232425wxy/BFT/blockchain"
+	"github.com/232425wxy/BFT/crtrust"
+	"github.com/232425wxy/BFT/gossip"
+	srtime "github.com/232425wxy/BFT/libs/time"
 	"math"
 	"net"
 	"net/http"
@@ -219,17 +220,6 @@ func doHandshake(
 	return nil
 }
 
-// 获取节点的地址，判断自己的地址是否在 validator 集合中，是的话，则表明自己是一个 validator
-func logNodeStartupInfo(state sm.State, pubKey crypto.PubKey, consensusLogger log.CRLogger) {
-	addr := pubKey.Address()
-	// Log whether this node is a validator or an observer
-	if state.Validators.HasAddress(addr) {
-		consensusLogger.Infow("This node is a validator", "addr", addr, "pubKey", pubKey)
-	} else {
-		consensusLogger.Infow("This node is not a validator", "addr", addr, "pubKey", pubKey)
-	}
-}
-
 // 判断自己是否是系统中唯一的 validator
 func onlyValidatorIsUs(state sm.State, pubKey crypto.PubKey) bool {
 	if state.Validators.Size() > 1 {
@@ -281,6 +271,7 @@ func createConsensusReactor(config *cfg.Config,
 	privValidator types.PrivValidator,
 	waitSync bool,
 	eventBus *types.EventBus,
+	crTrustReactor *crtrust.Reactor,
 	consensusLogger log.CRLogger) (*cs.Reactor, *cs.State) {
 	consensusState := cs.NewState(
 		config.Consensus,
@@ -288,6 +279,7 @@ func createConsensusReactor(config *cfg.Config,
 		blockExec,
 		blockStore,
 		mempool,
+		crTrustReactor,
 	)
 	consensusState.SetLogger(consensusLogger)
 	if privValidator != nil {
@@ -329,6 +321,7 @@ func createSwitch(config *cfg.Config,
 	mempoolReactor *mempl.Reactor,
 	bcReactor gossip.Reactor,
 	consensusReactor *cs.Reactor,
+	crTrustReactor *crtrust.Reactor,
 	nodeInfo *gossip.NodeInfo,
 	nodeKey *gossip.NodeKey,
 	p2pLogger log.CRLogger) *gossip.Switch {
@@ -338,6 +331,7 @@ func createSwitch(config *cfg.Config,
 	sw.AddReactor("MEMPOOL", mempoolReactor)
 	sw.AddReactor("BLOCKCHAIN", bcReactor)
 	sw.AddReactor("CONSENSUS", consensusReactor)
+	sw.AddReactor("CRTRUST", crTrustReactor)
 
 	sw.SetNodeInfo(nodeInfo)
 	sw.SetNodeKey(nodeKey)
@@ -410,14 +404,14 @@ func NewNode(config *cfg.Config,
 		return nil, fmt.Errorf("can't get pubkey: %w", err)
 	}
 
-	nodeInfo, err := makeNodeInfo(config, nodeKey, genDoc, pubKey.Address())
+	nodeInfo, err := makeNodeInfo(config, nodeKey, genDoc, pubKey)
 	if err != nil {
 		return nil, err
 	}
 
 	//##########################################################################################
 	// 确认自己是不是拜占庭节点
-	amI := ensureWhoisByzantine(splitAndTrimEmpty(config.P2P.PersistentPeers, ",", " "), config, nodeInfo.NodeID)
+	amI := testWhoisByzantine(splitAndTrimEmpty(config.P2P.PersistentPeers, ",", " "), config, nodeInfo.NodeID)
 	if amI {
 		logger = logger.With("byzantine", nodeInfo.NodeID)
 	}
@@ -444,8 +438,6 @@ func NewNode(config *cfg.Config,
 	// 决定我们是否应该进行快速同步，这必须发生在握手之后，因为应用程序可能会修改验证器集，指定我们自己作为唯一的验证器。
 	fastSync := config.FastSyncMode && !onlyValidatorIsUs(state, pubKey)
 
-	logNodeStartupInfo(state, pubKey, consensusLogger)
-
 	// Make MempoolReactor
 	mempoolReactor, mempool := createMempoolAndMempoolReactor(config, proxyApp, state, logger)
 
@@ -458,17 +450,20 @@ func NewNode(config *cfg.Config,
 		return nil, fmt.Errorf("could not create blockchain reactor: %w", err)
 	}
 
-	consensusReactor, consensusState := createConsensusReactor(
-		config, state, blockExec, blockStore, mempool, privValidator, fastSync, eventBus, consensusLogger,
-	)
+	crTrustReactor := crtrust.NewReactor(pubKey, nodeInfo.NodeID)
+	crTrustReactor.SetLogger(logger.With("module", "CRTrust"))
 
+
+	consensusReactor, consensusState := createConsensusReactor(
+		config, state, blockExec, blockStore, mempool, privValidator, fastSync, eventBus, crTrustReactor, consensusLogger,
+	)
 
 	// Setup Transport.
 	transport := createTransport(config, nodeInfo, nodeKey)
 
 	// Setup Switch.
 	p2pLogger := logger.With("module", "p2p")
-	sw := createSwitch(config, transport, mempoolReactor, bcReactor, consensusReactor, nodeInfo, nodeKey, p2pLogger, )
+	sw := createSwitch(config, transport, mempoolReactor, bcReactor, consensusReactor, crTrustReactor, nodeInfo, nodeKey, p2pLogger, )
 
 	err = sw.AddPersistentPeers(splitAndTrimEmpty(config.P2P.PersistentPeers, ",", " "))
 	if err != nil {
@@ -573,15 +568,15 @@ func (n *Node) OnStop() {
 
 	// first stop the non-reactor services
 	if err := n.eventBus.Stop(); err != nil {
-		n.Logger.Errorw("Error closing eventBus", "err", err)
+		n.Logger.Warnw("Error closing eventBus", "err", err)
 	}
 	if err := n.indexerService.Stop(); err != nil {
-		n.Logger.Errorw("Error closing indexerService", "err", err)
+		n.Logger.Warnw("Error closing indexerService", "err", err)
 	}
 
 	// now stop the reactors
 	if err := n.sw.Stop(); err != nil {
-		n.Logger.Errorw("Error closing switch", "err", err)
+		n.Logger.Warnw("Error closing switch", "err", err)
 	}
 
 	// stop mempool WAL
@@ -590,7 +585,7 @@ func (n *Node) OnStop() {
 	}
 
 	if err := n.transport.Close(); err != nil {
-		n.Logger.Errorw("Error closing transport", "err", err)
+		n.Logger.Warnw("Error closing transport", "err", err)
 	}
 
 	n.isListening = false
@@ -599,20 +594,20 @@ func (n *Node) OnStop() {
 	for _, l := range n.rpcListeners {
 		n.Logger.Infow("Closing rpc listener", "listener", l)
 		if err := l.Close(); err != nil {
-			n.Logger.Errorw("Error closing listener", "listener", l, "err", err)
+			n.Logger.Warnw("Error closing listener", "listener", l, "err", err)
 		}
 	}
 
 	if pvsc, ok := n.privValidator.(service.Service); ok {
 		if err := pvsc.Stop(); err != nil {
-			n.Logger.Errorw("Error closing private validator", "err", err)
+			n.Logger.Warnw("Error closing private validator", "err", err)
 		}
 	}
 
 	if n.prometheusSrv != nil {
 		if err := n.prometheusSrv.Shutdown(context.Background()); err != nil {
 			// Error from closing listeners, or context timeout:
-			n.Logger.Errorw("Prometheus HTTP server Shutdown", "err", err)
+			n.Logger.Warnw("Prometheus HTTP server Shutdown", "err", err)
 		}
 	}
 }
@@ -674,7 +669,7 @@ func (n *Node) startRPC() ([]net.Listener, error) {
 			rpcserver.OnDisconnect(func(remoteAddr string) {
 				err := n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
 				if err != nil && err != pubsub.ErrSubscriptionNotFound {
-					wmLogger.Errorw("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
+					wmLogger.Warnw("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
 				}
 			}),
 			rpcserver.ReadLimit(config.MaxBodyBytes),
@@ -690,7 +685,7 @@ func (n *Node) startRPC() ([]net.Listener, error) {
 		var rootHandler http.Handler = mux
 		go func() {
 			if err := rpcserver.Serve(listener, rootHandler, rpcLogger, config); err != nil {
-				n.Logger.Errorw("Error serving server", "err", err)
+				n.Logger.Warnw("Error serving server", "err", err)
 			}
 		}()
 		listeners[i] = listener
@@ -775,7 +770,7 @@ func makeNodeInfo(
 	config *cfg.Config,
 	nodeKey *gossip.NodeKey,
 	genDoc *types.GenesisDoc,
-	address crypto.Address,
+	pubKey crypto.PubKey,
 ) (*gossip.NodeInfo, error) {
 	var bcChannel byte
 	bcChannel = blockchain.BlockchainChannel
@@ -783,8 +778,8 @@ func makeNodeInfo(
 	nodeInfo := &gossip.NodeInfo{
 		NodeID:  nodeKey.ID(),
 		ChainID: genDoc.ChainID,
-		Channels: []byte{bcChannel, cs.StateChannel, cs.DataChannel, cs.VoteChannel, cs.VoteSetBitsChannel, mempl.MempoolChannel},
-		Address: address,
+		Channels: []byte{bcChannel, cs.StateChannel, cs.DataChannel, cs.VoteChannel, cs.VoteSetBitsChannel, mempl.MempoolChannel, crtrust.WhistleChannel, crtrust.LocalEvaluationChannel},
+		Pubkey: pubKey,
 	}
 
 	nodeInfo.ListenAddr = config.P2P.ListenAddress
@@ -802,10 +797,7 @@ var (
 // LoadStateFromDBOrGenesisDocProvider attempts to load the state from the
 // database, or creates one using the given genesisDocProvider. On success this also
 // returns the genesis doc loaded through the given provider.
-func LoadStateFromDBOrGenesisDocProvider(
-	stateDB dbm.DB,
-	genesisDocProvider GenesisDocProvider,
-) (sm.State, *types.GenesisDoc, error) {
+func LoadStateFromDBOrGenesisDocProvider(stateDB dbm.DB, genesisDocProvider GenesisDocProvider) (sm.State, *types.GenesisDoc, error) {
 	// Get genesis doc
 	genDoc, err := loadGenesisDoc(stateDB)
 	if err != nil {
@@ -885,8 +877,7 @@ func round(x float64) int {
 	return int(math.Floor(x))
 }
 
-// TODO 信誉评估
-func ensureWhoisByzantine(addrs []string, config *cfg.Config, id gossip.ID) bool {
+func testWhoisByzantine(addrs []string, config *cfg.Config, id gossip.ID) bool {
 	ids := make(gossip.IDS, len(addrs))
 	for i, addr := range addrs {
 		id := gossip.ID(strings.Split(addr, "@")[0])
@@ -897,10 +888,14 @@ func ensureWhoisByzantine(addrs []string, config *cfg.Config, id gossip.ID) bool
 	nums := round(float64(len(addrs)) * byzantine_ratio)
 	for i := 0; i < nums; i++ {
 		if ids[i] == id {
-			config.Consensus.IsByzantine = true
+			config.Consensus.TestIsByzantine = true
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 			return true
 		}
+	}
+	if ids[nums] == id {
+		config.Consensus.TestWhistleblower = true
+		cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 	}
 	return false
 }

@@ -101,20 +101,20 @@ func (bom *bomber) sendRoutine() {
 				if bytes.Equal(recv, srhash.Sum(raw)) {
 					bom.hasSentTxNum++
 				} else {
-					logger.Errorw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", string(recv))
+					logger.Warnw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", string(recv))
 				}
 			case "broadcast_tx_sync":
 				if bytes.Equal(recv, srhash.Sum(raw)) {
 					bom.hasSentTxNum++
 				} else {
-					logger.Errorw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", string(recv))
+					logger.Warnw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", string(recv))
 				}
 			case "broadcast_tx_commit":
 				if bytes.Equal(recv, raw) {
 					bom.hasSentTxNum++
 					logger.Infow("new block was committed successfully")
 				} else {
-					logger.Errorw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", srhash.Sum(recv))
+					logger.Warnw("receive wrong feedback", "expected", srhash.Sum(raw), "actual", srhash.Sum(recv))
 				}
 			}
 

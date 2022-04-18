@@ -1,6 +1,9 @@
 package consensus
 
 import (
+	"encoding/binary"
+	"errors"
+	"fmt"
 	auto "github.com/232425wxy/BFT/libs/autofile"
 	srjson "github.com/232425wxy/BFT/libs/json"
 	srlog "github.com/232425wxy/BFT/libs/log"
@@ -8,9 +11,6 @@ import (
 	"github.com/232425wxy/BFT/libs/service"
 	srtime "github.com/232425wxy/BFT/libs/time"
 	protoconsensus "github.com/232425wxy/BFT/proto/consensus"
-	"encoding/binary"
-	"errors"
-	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"hash/crc32"
 	"io"
@@ -141,7 +141,7 @@ func (wal *BaseWAL) processFlushTicks() {
 		select {
 		case <-wal.flushTicker.C:
 			if err := wal.FlushAndSync(); err != nil {
-				wal.Logger.Errorw("Periodic WAL flush failed", "err", err)
+				wal.Logger.Warnw("Periodic WAL flush failed", "err", err)
 			}
 		case <-wal.Quit():
 			return
@@ -160,10 +160,10 @@ func (wal *BaseWAL) FlushAndSync() error {
 func (wal *BaseWAL) OnStop() {
 	wal.flushTicker.Stop()
 	if err := wal.FlushAndSync(); err != nil {
-		wal.Logger.Errorw("error on flush data to disk", "error", err)
+		wal.Logger.Warnw("error on flush data to disk", "error", err)
 	}
 	if err := wal.group.Stop(); err != nil {
-		wal.Logger.Errorw("error trying to stop wal", "error", err)
+		wal.Logger.Warnw("error trying to stop wal", "error", err)
 	}
 	wal.group.Close()
 }
@@ -181,7 +181,7 @@ func (wal *BaseWAL) Write(msg WALMessage) error {
 	}
 
 	if err := wal.enc.Encode(&TimedWALMessage{srtime.Now(), msg}); err != nil {
-		wal.Logger.Errorw("Error writing msg to consensus wal. WARNING: recover may not be possible for the current height",
+		wal.Logger.Warnw("Error writing msg to consensus wal. WARNING: recover may not be possible for the current height",
 			"err", err, "msg", msg)
 		return err
 	}
@@ -200,7 +200,7 @@ func (wal *BaseWAL) WriteSync(msg WALMessage) error {
 	}
 
 	if err := wal.FlushAndSync(); err != nil {
-		wal.Logger.Errorw(`WriteSync failed to flush consensus wal.
+		wal.Logger.Warnw(`WriteSync failed to flush consensus wal.
 		WARNING: may result in creating alternative proposals / votes for the current height iff the node restarted`,
 			"err", err)
 		return err
@@ -249,7 +249,7 @@ func (wal *BaseWAL) SearchForEndHeight(height int64, options *WALSearchOptions) 
 				break
 			}
 			if options.IgnoreDataCorruptionErrors && IsDataCorruptionError(err) {
-				wal.Logger.Errorw("Corrupted entry. Skipping...", "err", err)
+				wal.Logger.Warnw("Corrupted entry. Skipping...", "err", err)
 				// 如果忽略硬盘内存储的数据发生损坏这个错误，那么当遇到此错误时则直接跳过忽略
 				continue
 			} else if err != nil {

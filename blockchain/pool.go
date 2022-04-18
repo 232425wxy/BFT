@@ -1,15 +1,15 @@
 package blockchain
 
 import (
-	"github.com/232425wxy/BFT/gossip"
 	"errors"
 	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
+	"github.com/232425wxy/BFT/gossip"
 	"github.com/232425wxy/BFT/libs/log"
 	"github.com/232425wxy/BFT/libs/service"
 	"github.com/232425wxy/BFT/types"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 
@@ -330,7 +330,7 @@ func (pool *BlockPool) makeNextRequester() {
 
 	err := request.Start()
 	if err != nil {
-		request.Logger.Errorw("Error starting request", "err", err)
+		request.Logger.Warnw("Error starting request", "err", err)
 	}
 }
 
@@ -432,7 +432,7 @@ func (peer *bpPeer) onTimeout() {
 
 	err := errors.New("peer did not send us anything")
 	peer.pool.sendError(err, peer.id)
-	peer.logger.Errorw("SendTimeout", "reason", err, "timeout", peerTimeout)
+	peer.logger.Warnw("SendTimeout", "reason", err, "timeout", peerTimeout)
 	peer.didTimeout = true
 }
 
@@ -552,7 +552,7 @@ OUTER_LOOP:
 			select {
 			case <-bpr.pool.Quit():
 				if err := bpr.Stop(); err != nil {
-					bpr.Logger.Errorw("Error stopped requester", "err", err)
+					bpr.Logger.Warnw("Error stopped requester", "err", err)
 				}
 				return
 			case <-bpr.Quit():

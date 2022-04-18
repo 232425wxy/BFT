@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 BUILD_FLAGS = -mod=readonly
 
-VALIDATORS_NUM = 5
+VALIDATORS_NUM = 7
 
 INDEX = 0
 

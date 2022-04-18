@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	StateChannel       = byte(0x20)
-	DataChannel        = byte(0x21)
-	VoteChannel        = byte(0x22)
-	VoteSetBitsChannel = byte(0x23)
+	StateChannel       = byte(0x02)
+	DataChannel        = byte(0x03)
+	VoteChannel        = byte(0x04)
+	VoteSetBitsChannel = byte(0x05)
 
 	maxMsgSize = 1048576
 
@@ -91,7 +91,7 @@ func (conR *Reactor) OnStart() error {
 func (conR *Reactor) OnStop() {
 	conR.unsubscribeFromBroadcastEvents()
 	if err := conR.conS.Stop(); err != nil {
-		conR.Logger.Errorw("Error stopping consensus state", "err", err)
+		conR.Logger.Warnw("Error stopping consensus state", "err", err)
 	}
 	if !conR.WaitSync() {
 		conR.conS.Wait()
@@ -198,13 +198,13 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
-		conR.Logger.Errorw("Error decoding message", "src", src, "chId", chID, "err", err)
+		conR.Logger.Warnw("Error decoding message", "src", src, "chId", chID, "err", err)
 		conR.Switch.StopPeerForError(src, err)
 		return
 	}
 
 	if err = msg.ValidateBasic(); err != nil {
-		conR.Logger.Errorw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
+		conR.Logger.Warnw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
 		conR.Switch.StopPeerForError(src, err)
 		return
 	}
@@ -225,7 +225,7 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 			initialHeight := conR.conS.state.InitialHeight
 			conR.conS.mtx.Unlock()
 			if err = msg.ValidateHeight(initialHeight); err != nil {
-				conR.Logger.Errorw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
+				conR.Logger.Warnw("Peer sent us invalid msg", "peer", src, "msg", msg, "err", err)
 				conR.Switch.StopPeerForError(src, err)
 				return
 			}
@@ -259,7 +259,7 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 			}
 			src.TrySend(VoteSetBitsChannel, MustEncode(&VoteSetBitsMessage{Height: msg.Height, Round: msg.Round, Type: msg.Type, BlockID: msg.BlockID, Votes: ourVotes}))
 		default:
-			conR.Logger.Errorw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
+			conR.Logger.Warnw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
 		}
 
 	case DataChannel:
@@ -277,7 +277,7 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 			ps.SetHasProposalBlockPart(msg.Height, msg.Round, int(msg.Part.Index))
 			conR.conS.peerMsgQueue <- msgInfo{msg, src.ID()}
 		default:
-			conR.Logger.Errorw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
+			conR.Logger.Warnw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
 		}
 
 	case VoteChannel:
@@ -297,7 +297,7 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 			cs.peerMsgQueue <- msgInfo{msg, src.ID()}
 
 		default:
-			conR.Logger.Errorw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
+			conR.Logger.Warnw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
 		}
 
 	case VoteSetBitsChannel:
@@ -328,11 +328,11 @@ func (conR *Reactor) Receive(chID byte, src *gossip.Peer, msgBytes []byte) {
 			}
 		default:
 			// don't punish (leave room for soft upgrades)
-			conR.Logger.Errorw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
+			conR.Logger.Warnw(fmt.Sprintf("Unknown message type %v", reflect.TypeOf(msg)))
 		}
 
 	default:
-		conR.Logger.Errorw(fmt.Sprintf("Unknown chId %X", chID))
+		conR.Logger.Warnw(fmt.Sprintf("Unknown chId %X", chID))
 	}
 }
 
@@ -359,21 +359,28 @@ func (conR *Reactor) subscribeToBroadcastEvents() {
 		func(data srevents.EventData) {
 			conR.broadcastNewRoundStepMessage(data.(*RoundState))
 		}); err != nil {
-		conR.Logger.Errorw("Error adding listener for events", "err", err)
+		conR.Logger.Warnw("Error adding listener for events", "err", err)
 	}
 
 	if err := conR.conS.evsw.AddListenerForEvent(subscriber, types.EventValidBlock,
 		func(data srevents.EventData) {
 			conR.broadcastNewValidBlockMessage(data.(*RoundState))
 		}); err != nil {
-		conR.Logger.Errorw("Error adding listener for events", "err", err)
+		conR.Logger.Warnw("Error adding listener for events", "err", err)
 	}
 
 	if err := conR.conS.evsw.AddListenerForEvent(subscriber, types.EventVote,
 		func(data srevents.EventData) {
 			conR.broadcastHasVoteMessage(data.(*types.Vote))
 		}); err != nil {
-		conR.Logger.Errorw("Error adding listener for events", "err", err)
+		conR.Logger.Warnw("Error adding listener for events", "err", err)
+	}
+
+	if err := conR.conS.evsw.AddListenerForEvent(subscriber, types.EventTrust,
+		func(data srevents.EventData) {
+			conR.conS.crTrustReactor.NoticeCalcGlobalTrust(data.(int64))
+		}); err != nil {
+		conR.Logger.Warnw("Error adding listener for events", "err", err)
 	}
 }
 
@@ -435,13 +442,12 @@ func (conR *Reactor) gossipDataRoutine(peer *gossip.Peer, ps *PeerState) {
 OUTER_LOOP:
 	for {
 		if !peer.IsRunning() || !conR.IsRunning() {
-			logger.Errorw("Stopping gossipDataRoutine for peer", "peer", peer.ID(), "ip", peer.RemoteIP())
+			logger.Warnw("Stopping gossipDataRoutine for peer", "peer", peer.ID(), "ip", peer.RemoteIP())
 			return
 		}
 		rs := conR.conS.RoundState
 		prs := ps.GetRoundState()
 
-		// Send proposal Block parts?
 		if rs.PrePrepareBlockParts.HeaderEqualsTo(prs.ProposalBlockPartSetHeader) {
 			if index, ok := rs.PrePrepareBlockParts.BitArray().Sub(prs.ProposalBlockParts.Copy()).PickRandom(); ok {
 				// 这里的PickRandom是合理的，因为对于发送过的part，我们会用SetHasProposalBlockPart进行标记
@@ -468,7 +474,7 @@ OUTER_LOOP:
 			if prs.ProposalBlockParts == nil {
 				blockMeta := conR.conS.blockStore.LoadBlockMeta(prs.Height)
 				if blockMeta == nil {
-					heightLogger.Errorw("Failed to load block meta", "blockstoreBase", blockStoreBase, "blockstoreHeight", conR.conS.blockStore.Height())
+					heightLogger.Warnw("Failed to load block meta", "blockstoreBase", blockStoreBase, "blockstoreHeight", conR.conS.blockStore.Height())
 					time.Sleep(conR.conS.config.PeerGossipSleepDuration)  // 默认睡眠100ms
 				} else {
 					ps.InitProposalBlockParts(blockMeta.BlockID.PartSetHeader)
@@ -517,7 +523,7 @@ func (conR *Reactor) gossipDataForCatchup(logger srlog.CRLogger, rs *RoundState,
 		// Ensure that the peer's PartSetHeader is correct
 		blockMeta := conR.conS.blockStore.LoadBlockMeta(prs.Height)
 		if blockMeta == nil {
-			logger.Errorw("Failed to load block meta", "ourHeight", rs.Height, "blockstoreBase", conR.conS.blockStore.Base(), "blockstoreHeight", conR.conS.blockStore.Height())
+			logger.Warnw("Failed to load block meta", "ourHeight", rs.Height, "blockstoreBase", conR.conS.blockStore.Base(), "blockstoreHeight", conR.conS.blockStore.Height())
 			time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 			return
 		} else if !blockMeta.BlockID.PartSetHeader.Equals(prs.ProposalBlockPartSetHeader) {
@@ -528,7 +534,7 @@ func (conR *Reactor) gossipDataForCatchup(logger srlog.CRLogger, rs *RoundState,
 		// Load the part
 		part := conR.conS.blockStore.LoadBlockPart(prs.Height, index)
 		if part == nil {
-			logger.Errorw("Could not load part", "index", index, "blockPartSetHeader", blockMeta.BlockID.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
+			logger.Warnw("Could not load part", "index", index, "blockPartSetHeader", blockMeta.BlockID.PartSetHeader, "peerBlockPartSetHeader", prs.ProposalBlockPartSetHeader)
 			time.Sleep(conR.conS.config.PeerGossipSleepDuration)
 			return
 		}
@@ -557,7 +563,7 @@ OUTER_LOOP:
 	for {
 		// Manage disconnects from self or peer.
 		if !peer.IsRunning() || !conR.IsRunning() {
-			logger.Errorw("Stopping gossipVotesRoutine for peer", "peer", peer.ID(), "ip", peer.RemoteIP())
+			logger.Warnw("Stopping gossipVotesRoutine for peer", "peer", peer.ID(), "ip", peer.RemoteIP())
 			return
 		}
 		rs := conR.conS.RoundState

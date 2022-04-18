@@ -1,10 +1,10 @@
 package txindex
 
 import (
+	"context"
 	"github.com/232425wxy/BFT/libs/service"
 	"github.com/232425wxy/BFT/state/indexer"
 	"github.com/232425wxy/BFT/types"
-	"context"
 )
 
 const (
@@ -64,7 +64,7 @@ func (is *IndexerService) OnStart() error {
 				txResult := msg2.Data().(types.EventDataTx).TxResult
 
 				if err = batch.Add(&txResult); err != nil {
-					is.Logger.Errorw(
+					is.Logger.Warnw(
 						"failed to add tx to batch",
 						"height", height,
 						"index", txResult.Index,
@@ -74,13 +74,13 @@ func (is *IndexerService) OnStart() error {
 			}
 
 			if err := is.blockIdxr.Index(eventDataHeader); err != nil {
-				is.Logger.Errorw("failed to index block", "height", height, "err", err)
+				is.Logger.Warnw("failed to index block", "height", height, "err", err)
 			} else {
 				is.Logger.Debugw("indexed block", "height", height)
 			}
 
 			if err = is.txIdxr.AddBatch(batch); err != nil {
-				is.Logger.Errorw("failed to index block txs", "height", height, "err", err)
+				is.Logger.Warnw("failed to index block txs", "height", height, "err", err)
 			} else {
 				is.Logger.Debugw("indexed block txs", "height", height, "num_txs", eventDataHeader.NumTxs)
 			}

@@ -1,18 +1,18 @@
 package commands
 
 import (
-	"github.com/232425wxy/BFT/gossip"
-	srtime "github.com/232425wxy/BFT/libs/time"
 	"fmt"
+	cfg "github.com/232425wxy/BFT/config"
+	"github.com/232425wxy/BFT/gossip"
+	srrand "github.com/232425wxy/BFT/libs/rand"
+	srtime "github.com/232425wxy/BFT/libs/time"
+	"github.com/232425wxy/BFT/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	cfg "github.com/232425wxy/BFT/config"
-	srrand "github.com/232425wxy/BFT/libs/rand"
-	"github.com/232425wxy/BFT/types"
 )
 
 var (
@@ -25,10 +25,6 @@ var (
 	populatePersistentPeers bool
 	startingIPAddress       string
 	p2pPort                 int
-	randomMonikers          bool
-	evaluation              bool
-	byzantine_ratio         float64
-	toleranceDelay          float64
 )
 
 const (
@@ -44,10 +40,6 @@ func init() {
 	TestnetFilesCmd.Flags().BoolVar(&populatePersistentPeers, "populate-persistent-peers", true, "update config of each node with the list of persistent peers build using either hostname-prefix or starting-ip-address")
 	TestnetFilesCmd.Flags().StringVar(&startingIPAddress, "starting-ip-address", "", "starting IP address (\"192.168.0.1\" results in persistent peers list ID0@192.168.0.1:26656, ID1@192.168.0.2:26656, ...)")
 	TestnetFilesCmd.Flags().IntVar(&p2pPort, "p2p-port", 36656, "P2P Port")
-	TestnetFilesCmd.Flags().BoolVar(&randomMonikers, "random-monikers", false, "randomize the moniker for each generated node")
-	TestnetFilesCmd.Flags().BoolVar(&evaluation, "evaluation", false, "")
-	TestnetFilesCmd.Flags().Float64Var(&byzantine_ratio, "byzantine_ratio", 0., "")
-	TestnetFilesCmd.Flags().Float64Var(&toleranceDelay, "tolerance_delay", 3.3, "")
 }
 
 // TestnetFilesCmd allows initialisation of files for a SRBFT testnet.
@@ -63,7 +55,7 @@ Optionally, it will fill in persistent_peers list in config file using either ho
 
 Example:
 
-	SRBFT testnet --v 4 --o ./output --populate-persistent-peers --starting-ip-address 192.168.10.2
+	BFT testnet --v 4 --o ./output --populate-persistent-peers --starting-ip-address 192.168.10.2
 	`,
 	RunE: testnetFiles,
 }
@@ -71,7 +63,6 @@ Example:
 func testnetFiles(cmd *cobra.Command, args []string) error {
 
 	config := cfg.DefaultConfig()
-
 	// overwrite default config if set and valid
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
@@ -164,9 +155,6 @@ func testnetFiles(cmd *cobra.Command, args []string) error {
 		if populatePersistentPeers {
 			config.P2P.PersistentPeers = persistentPeers
 		}
-		config.Consensus.TestByzantineRatio = byzantine_ratio
-		config.Consensus.Evaluation = evaluation
-		config.Consensus.ToleranceDelay = toleranceDelay
 		cfg.WriteConfigFile(filepath.Join(nodeDir, "config", "config.toml"), config)
 	}
 

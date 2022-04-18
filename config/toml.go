@@ -223,24 +223,24 @@ max_tx_bytes = {{ .Mempool.MaxTxBytes }}
 wal_file = "{{ js .Consensus.WalPath }}"
 
 # How long we wait for a proposal block before prevoting nil
-timeout_propose = "{{ .Consensus.TimeoutPropose }}"
+timeout_propose = "{{ .Consensus.TimeoutPrePrepare }}"
 # How much timeout_propose increases with each round
-timeout_propose_delta = "{{ .Consensus.TimeoutProposeDelta }}"
+timeout_propose_delta = "{{ .Consensus.TimeoutPrePrepareDelta }}"
 # How long we wait after receiving +2/3 prevotes for “anything” (ie. not a single block or nil)
-timeout_prevote = "{{ .Consensus.TimeoutPrevote }}"
+timeout_prevote = "{{ .Consensus.TimeoutPrepare }}"
 # How much the timeout_prevote increases with each round
-timeout_prevote_delta = "{{ .Consensus.TimeoutPrevoteDelta }}"
+timeout_prevote_delta = "{{ .Consensus.TimeoutPrepareDelta }}"
 # How long we wait after receiving +2/3 precommits for “anything” (ie. not a single block or nil)
-timeout_precommit = "{{ .Consensus.TimeoutPrecommit }}"
+timeout_precommit = "{{ .Consensus.TimeoutCommit }}"
 # How much the timeout_precommit increases with each round
-timeout_precommit_delta = "{{ .Consensus.TimeoutPrecommitDelta }}"
+timeout_precommit_delta = "{{ .Consensus.TimeoutCommitDelta }}"
 # How long we wait after committing a block, before starting on the new
 # height (this gives us a chance to receive some more precommits, even
 # though we already have +2/3).
-timeout_commit = "{{ .Consensus.TimeoutCommit }}"
+timeout_commit = "{{ .Consensus.TimeoutReply }}"
 
-# Make progress as soon as we have all the precommits (as if TimeoutCommit = 0)
-skip_timeout_commit = {{ .Consensus.SkipTimeoutCommit }}
+# Make progress as soon as we have all the precommits (as if TimeoutReply = 0)
+skip_timeout_commit = {{ .Consensus.SkipTimeoutReply }}
 
 # EmptyBlocks mode and possible interval between empty blocks
 create_empty_blocks = {{ .Consensus.CreateEmptyBlocks }}
@@ -250,18 +250,13 @@ create_empty_blocks_interval = "{{ .Consensus.CreateEmptyBlocksInterval }}"
 peer_gossip_sleep_duration = "{{ .Consensus.PeerGossipSleepDuration }}"
 peer_query_maj23_sleep_duration = "{{ .Consensus.PeerQueryMaj23SleepDuration }}"
 
-# 拜占庭节点所占比例
-byzantine_ratio = {{ .Consensus.TestByzantineRatio }}
-
-# 投票签名错误的概率
-prob_wrong_sign = {{ .Consensus.ProbWrongSign }}
-
 # true 则表示自己是拜占庭节点，用于论文测试
-is_byzantine = {{ .Consensus.IsByzantine }}
+test_is_byzantine = {{ .Consensus.TestIsByzantine }}
 
-evaluation = {{ .Consensus.Evaluation }}
+test_byzantine_ratio = {{ .Consensus.TestByzantineRatio }}
 
-tolerance_delay = {{ .Consensus.ToleranceDelay }}
+test_whistleblower = {{ .Consensus.TestWhistleblower }}
+
 
 #######################################################
 ###   Transaction Indexer Configuration Options     ###

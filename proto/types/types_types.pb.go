@@ -67,7 +67,7 @@ const (
 	// Votes
 	PrepareType SignedMsgType = 1
 	CommitType  SignedMsgType = 2
-	// Propose
+	// PrePrepareWait
 	PrePrepareType SignedMsgType = 32
 )
 

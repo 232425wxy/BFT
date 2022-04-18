@@ -107,13 +107,14 @@ var PB2SR = pb2sr{}
 type pb2sr struct{}
 
 func (pb2sr) ValidatorUpdates(vals []protoabci.ValidatorUpdate) ([]*Validator, error) {
-	srVals := make([]*Validator, len(vals))
+	crVals := make([]*Validator, len(vals))
 	for i, v := range vals {
 		pub, err := cryptoenc.PubKeyFromProto(v.PubKey)
 		if err != nil {
 			return nil, err
 		}
-		srVals[i] = NewValidator(pub, v.Power)
+		crVals[i] = NewValidator(pub, v.Power)
+		crVals[i].Type = v.Type
 	}
-	return srVals, nil
+	return crVals, nil
 }
